@@ -14,6 +14,6 @@
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
-    MapViewer sample(1280, 720, L"MP - Interactive Map");
+    MapViewer sample(800, 600, L"MP - Interactive Map");
     return Win32Application::Run(&sample, hInstance, nCmdShow);
 }
