@@ -66,6 +66,8 @@ target_link_directories(MP-InteractiveMap
         ${CMAKE_CURRENT_LIST_DIR}/libs
 )
 
+target_link_libraries(MP-InteractiveMap ${libs})
+
 set_target_properties(MP-InteractiveMap
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY       "${CMAKE_CURRENT_LIST_DIR}/"
