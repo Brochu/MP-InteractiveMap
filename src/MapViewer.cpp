@@ -140,8 +140,11 @@ void MapViewer::LoadAssets()
 {
     // Create an empty root signature.
     {
+        CD3DX12_ROOT_PARAMETER1 constBufferParam;
+        constBufferParam.InitAsConstantBufferView(0);
+
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(0, nullptr, 0, nullptr,
+        rootSignatureDesc.Init_1_1(1, &constBufferParam, 0, nullptr,
              D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
         ComPtr<ID3DBlob> signature;
@@ -150,6 +153,33 @@ void MapViewer::LoadAssets()
         ThrowIfFailed(m_device->CreateRootSignature(
             0, signature->GetBufferPointer(), signature->GetBufferSize(),
             IID_PPV_ARGS(&m_rootSignature)));
+    }
+
+    // Create Constant Buffer for per-frame data
+    {
+        //TODO: Create the MVP matrices to rotate the object around
+        ConstantBuffer cb {};
+        cb.values.x = 0.0;
+        cb.values.y = 0.0;
+        cb.values.z = 0.0;
+        cb.values.w = 1.0;
+
+        D3D12_HEAP_PROPERTIES uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+        D3D12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(cb));
+
+        ThrowIfFailed(m_device->CreateCommittedResource(
+            &uploadHeapProps,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_constBuffer)));
+
+        UINT8* p;
+        CD3DX12_RANGE readRange(0, 0);
+        ThrowIfFailed(m_constBuffer->Map(0, &readRange, reinterpret_cast<void**>(&p)));
+        memcpy(p, &cb, sizeof(cb));
+        m_constBuffer->Unmap(0, nullptr);
     }
 
     // Create the pipeline state, which includes compiling and loading shaders.
@@ -309,6 +339,7 @@ void MapViewer::PopulateCommandList()
 
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    m_commandList->SetGraphicsRootConstantBufferView(0, m_constBuffer->GetGPUVirtualAddress());
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 

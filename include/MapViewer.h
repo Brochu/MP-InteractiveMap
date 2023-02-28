@@ -49,6 +49,10 @@ private:
         XMFLOAT4 color;
     };
 
+    struct ConstantBuffer {
+        XMFLOAT4 values;
+    };
+
     // Pipeline objects.
     CD3DX12_VIEWPORT m_viewport;
     CD3DX12_RECT m_scissorRect;
@@ -65,6 +69,7 @@ private:
 
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
+    ComPtr<ID3D12Resource> m_constBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 
     // Synchronization objects.
