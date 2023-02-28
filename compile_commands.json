@@ -21,7 +21,7 @@
 },
 {
   "directory": "C:/Users/Alex/Documents/MP-InteractiveMap/build",
-  "command": "C:\\PROGRA~1\\LLVM\\bin\\CLANG_~1.EXE -IC:/Users/Alex/Documents/MP-InteractiveMap/include -IC:/Users/Alex/Documents/MP-InteractiveMap/include/imgui -IC:/Users/Alex/Documents/MP-InteractiveMap/tracy/public/tracy -g -Xclang -gcodeview -O0 -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -std=gnu++17 -o CMakeFiles\\MP-InteractiveMap.dir\\src\\D3D12HelloFrameBuffering.cpp.obj -c C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\D3D12HelloFrameBuffering.cpp",
-  "file": "C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\D3D12HelloFrameBuffering.cpp"
+  "command": "C:\\PROGRA~1\\LLVM\\bin\\CLANG_~1.EXE -IC:/Users/Alex/Documents/MP-InteractiveMap/include -IC:/Users/Alex/Documents/MP-InteractiveMap/include/imgui -IC:/Users/Alex/Documents/MP-InteractiveMap/tracy/public/tracy -g -Xclang -gcodeview -O0 -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -std=gnu++17 -o CMakeFiles\\MP-InteractiveMap.dir\\src\\MapViewer.cpp.obj -c C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\MapViewer.cpp",
+  "file": "C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\MapViewer.cpp"
 }
 ]

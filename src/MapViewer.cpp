@@ -9,10 +9,10 @@
 //
 //*********************************************************
 
+#include "MapViewer.h"
 #include "stdafx.h"
-#include "D3D12HelloFrameBuffering.h"
 
-D3D12HelloFrameBuffering::D3D12HelloFrameBuffering(UINT width, UINT height, std::wstring name) :
+MapViewer::MapViewer(UINT width, UINT height, std::wstring name) :
     DXSample(width, height, name),
     m_frameIndex(0),
     m_viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)),
@@ -22,14 +22,14 @@ D3D12HelloFrameBuffering::D3D12HelloFrameBuffering(UINT width, UINT height, std:
 {
 }
 
-void D3D12HelloFrameBuffering::OnInit()
+void MapViewer::OnInit()
 {
     LoadPipeline();
     LoadAssets();
 }
 
 // Load the rendering pipeline dependencies.
-void D3D12HelloFrameBuffering::LoadPipeline()
+void MapViewer::LoadPipeline()
 {
     UINT dxgiFactoryFlags = 0;
 
@@ -136,7 +136,7 @@ void D3D12HelloFrameBuffering::LoadPipeline()
 }
 
 // Load the sample assets.
-void D3D12HelloFrameBuffering::LoadAssets()
+void MapViewer::LoadAssets()
 {
     // Create an empty root signature.
     {
@@ -212,10 +212,14 @@ void D3D12HelloFrameBuffering::LoadAssets()
         // recommended. Every time the GPU needs it, the upload heap will be marshalled 
         // over. Please read up on Default Heap usage. An upload heap is used here for 
         // code simplicity and because there are very few verts to actually transfer.
+        //TODO: Copy the vertex data over to default heap later
+        D3D12_HEAP_PROPERTIES uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+        D3D12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+
         ThrowIfFailed(m_device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            &uploadHeapProps,
             D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
+            &bufferDesc,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&m_vertexBuffer)));
@@ -253,12 +257,12 @@ void D3D12HelloFrameBuffering::LoadAssets()
 }
 
 // Update frame-based values.
-void D3D12HelloFrameBuffering::OnUpdate()
+void MapViewer::OnUpdate()
 {
 }
 
 // Render the scene.
-void D3D12HelloFrameBuffering::OnRender()
+void MapViewer::OnRender()
 {
     // Record all the commands we need to render the scene into the command list.
     PopulateCommandList();
@@ -273,7 +277,7 @@ void D3D12HelloFrameBuffering::OnRender()
     MoveToNextFrame();
 }
 
-void D3D12HelloFrameBuffering::OnDestroy()
+void MapViewer::OnDestroy()
 {
     // Ensure that the GPU is no longer referencing resources that are about to be
     // cleaned up by the destructor.
@@ -282,7 +286,7 @@ void D3D12HelloFrameBuffering::OnDestroy()
     CloseHandle(m_fenceEvent);
 }
 
-void D3D12HelloFrameBuffering::PopulateCommandList()
+void MapViewer::PopulateCommandList()
 {
     // Command list allocators can only be reset when the associated 
     // command lists have finished execution on the GPU; apps should use 
@@ -300,9 +304,15 @@ void D3D12HelloFrameBuffering::PopulateCommandList()
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
     // Indicate that the back buffer will be used as a render target.
-    m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+    D3D12_RESOURCE_BARRIER render_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_renderTargets[m_frameIndex].Get(),
+        D3D12_RESOURCE_STATE_PRESENT,
+        D3D12_RESOURCE_STATE_RENDER_TARGET);
+    m_commandList->ResourceBarrier(1, &render_barrier);
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
+            m_rtvHeap->GetCPUDescriptorHandleForHeapStart(),
+            m_frameIndex, m_rtvDescriptorSize);
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
     // Record commands.
@@ -313,13 +323,17 @@ void D3D12HelloFrameBuffering::PopulateCommandList()
     m_commandList->DrawInstanced(3, 1, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
-    m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+    D3D12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_renderTargets[m_frameIndex].Get(),
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PRESENT);
+    m_commandList->ResourceBarrier(1, &present_barrier);
 
     ThrowIfFailed(m_commandList->Close());
 }
 
 // Wait for pending GPU work to complete.
-void D3D12HelloFrameBuffering::WaitForGpu()
+void MapViewer::WaitForGpu()
 {
     // Schedule a Signal command in the queue.
     ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex]));
@@ -333,7 +347,7 @@ void D3D12HelloFrameBuffering::WaitForGpu()
 }
 
 // Prepare to render the next frame.
-void D3D12HelloFrameBuffering::MoveToNextFrame()
+void MapViewer::MoveToNextFrame()
 {
     // Schedule a Signal command in the queue.
     const UINT64 currentFenceValue = m_fenceValues[m_frameIndex];

@@ -10,10 +10,10 @@
 //*********************************************************
 
 #include "stdafx.h"
-#include "D3D12HelloFrameBuffering.h"
+#include "MapViewer.h"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
-    D3D12HelloFrameBuffering sample(1280, 720, L"D3D12 Hello Frame Buffering");
+    MapViewer sample(1280, 720, L"MP - Interactive Map");
     return Win32Application::Run(&sample, hInstance, nCmdShow);
 }

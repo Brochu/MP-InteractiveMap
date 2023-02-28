@@ -11,7 +11,7 @@ set (headers
     ${CMAKE_CURRENT_LIST_DIR}/include/Win32Application.h
     ${CMAKE_CURRENT_LIST_DIR}/include/DXSample.h
     ${CMAKE_CURRENT_LIST_DIR}/include/DXSampleHelper.h
-    ${CMAKE_CURRENT_LIST_DIR}/include/D3D12HelloFrameBuffering.h
+    ${CMAKE_CURRENT_LIST_DIR}/include/MapViewer.h
 )
 set (imgui_headers
 #    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imconfig.h
@@ -30,7 +30,7 @@ set (source
 
     ${CMAKE_CURRENT_LIST_DIR}/src/Win32Application.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/DXSample.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/D3D12HelloFrameBuffering.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/MapViewer.cpp
 )
 set (imgui_source
 #    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui.cpp
