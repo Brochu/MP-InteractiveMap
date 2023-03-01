@@ -262,6 +262,9 @@ void MapViewer::LoadAssets()
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&m_vertexBuffer)));
+        //TODO: Copy vertex data to default vram heap
+        //TODO: Also prepare, upload and copy indices data to default vram for loaded models
+        //TODO: Load all different map regions, only render a selected one from the group
 
         // Copy the triangle data to the vertex buffer.
         UINT8* pVertexDataBegin;
