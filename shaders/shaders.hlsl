@@ -9,18 +9,14 @@
 //
 //*********************************************************
 
-cbuffer PerFrame : register(b0) {
-    float4 values;
-};
+cbuffer PerFrame : register(b0) { float4 values; };
 
-struct PSInput
-{
+struct PSInput {
     float4 position : SV_POSITION;
     float4 color : COLOR;
 };
 
-PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
-{
+PSInput VSMain(float4 position : POSITION, float4 color : COLOR) {
     PSInput result;
 
     result.position = position;
@@ -29,7 +25,4 @@ PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
     return result;
 }
 
-float4 PSMain(PSInput input) : SV_TARGET
-{
-    return values;
-}
+float4 PSMain(PSInput input) : SV_TARGET { return values; }

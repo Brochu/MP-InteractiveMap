@@ -14,8 +14,7 @@
 #include "DXSampleHelper.h"
 #include "Win32Application.h"
 
-class DXSample
-{
+class DXSample {
 public:
     DXSample(UINT width, UINT height, std::wstring name);
     virtual ~DXSample();
@@ -26,25 +25,24 @@ public:
     virtual void OnDestroy() = 0;
 
     // Samples override the event handlers to handle specific messages.
-    virtual void OnKeyDown(UINT8 /*key*/)   {}
-    virtual void OnKeyUp(UINT8 /*key*/)     {}
-    virtual void OnMouseMove(UINT8, UINT8/*coords*/) {}
-    virtual void OnMouseWheel(UINT8/*xDelta*/) {}
+    virtual void OnKeyDown(UINT8 /*key*/) {}
+    virtual void OnKeyUp(UINT8 /*key*/) {}
+    virtual void OnMouseMove(UINT8, UINT8 /*coords*/) {}
+    virtual void OnMouseWheel(UINT8 /*xDelta*/) {}
 
     // Accessors.
-    UINT GetWidth() const           { return m_width; }
-    UINT GetHeight() const          { return m_height; }
-    const WCHAR* GetTitle() const   { return m_title.c_str(); }
+    UINT GetWidth() const { return m_width; }
+    UINT GetHeight() const { return m_height; }
+    const WCHAR *GetTitle() const { return m_title.c_str(); }
 
-    void ParseCommandLineArgs(_In_reads_(argc) WCHAR* argv[], int argc);
+    void ParseCommandLineArgs(_In_reads_(argc) WCHAR *argv[], int argc);
 
 protected:
     std::wstring GetAssetFullPath(LPCWSTR assetName);
 
-    void GetHardwareAdapter(
-        _In_ IDXGIFactory1* pFactory,
-        _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter,
-        bool requestHighPerformanceAdapter = false);
+    void GetHardwareAdapter(_In_ IDXGIFactory1 *pFactory,
+                            _Outptr_result_maybenull_ IDXGIAdapter1 **ppAdapter,
+                            bool requestHighPerformanceAdapter = false);
 
     void SetCustomWindowText(LPCWSTR text);
 

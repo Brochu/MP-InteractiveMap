@@ -15,15 +15,14 @@
 
 using namespace DirectX;
 
-// Note that while ComPtr is used to manage the lifetime of resources on the CPU,
-// it has no understanding of the lifetime of resources on the GPU. Apps must account
-// for the GPU lifetime of resources to avoid destroying objects that may still be
-// referenced by the GPU.
-// An example of this can be found in the class method: OnDestroy().
+// Note that while ComPtr is used to manage the lifetime of resources on the
+// CPU, it has no understanding of the lifetime of resources on the GPU. Apps
+// must account for the GPU lifetime of resources to avoid destroying objects
+// that may still be referenced by the GPU. An example of this can be found in
+// the class method: OnDestroy().
 using Microsoft::WRL::ComPtr;
 
-class MapViewer : public DXSample
-{
+class MapViewer : public DXSample {
 public:
     MapViewer(UINT width, UINT height, std::wstring name);
 
@@ -33,18 +32,17 @@ public:
     virtual void OnDestroy();
 
 private:
-    // In this sample we overload the meaning of FrameCount to mean both the maximum
-    // number of frames that will be queued to the GPU at a time, as well as the number
-    // of back buffers in the DXGI swap chain. For the majority of applications, this
-    // is convenient and works well. However, there will be certain cases where an
-    // application may want to queue up more frames than there are back buffers
-    // available.
-    // It should be noted that excessive buffering of frames dependent on user input
-    // may result in noticeable latency in your app.
+    // In this sample we overload the meaning of FrameCount to mean both the
+    // maximum number of frames that will be queued to the GPU at a time, as
+    // well as the number of back buffers in the DXGI swap chain. For the
+    // majority of applications, this is convenient and works well. However,
+    // there will be certain cases where an application may want to queue up
+    // more frames than there are back buffers available. It should be noted
+    // that excessive buffering of frames dependent on user input may result
+    // in noticeable latency in your app.
     static const UINT FrameCount = 2;
 
-    struct Vertex
-    {
+    struct Vertex {
         XMFLOAT3 position;
         XMFLOAT4 color;
     };

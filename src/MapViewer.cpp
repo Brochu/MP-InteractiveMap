@@ -10,36 +10,32 @@
 //*********************************************************
 
 #include "MapViewer.h"
+
 #include "stdafx.h"
 
-MapViewer::MapViewer(UINT width, UINT height, std::wstring name) :
-    DXSample(width, height, name),
-    m_frameIndex(0),
-    m_viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)),
-    m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height)),
-    m_fenceValues{},
-    m_rtvDescriptorSize(0)
-{
-}
+MapViewer::MapViewer(UINT width, UINT height, std::wstring name)
+    : DXSample(width, height, name), m_frameIndex(0),
+      m_viewport(0.0f, 0.0f, static_cast<float>(width),
+                 static_cast<float>(height)),
+      m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height)),
+      m_fenceValues{}, m_rtvDescriptorSize(0) {}
 
-void MapViewer::OnInit()
-{
+void MapViewer::OnInit() {
     LoadPipeline();
     LoadAssets();
 }
 
 // Load the rendering pipeline dependencies.
-void MapViewer::LoadPipeline()
-{
+void MapViewer::LoadPipeline() {
     UINT dxgiFactoryFlags = 0;
 
 #if defined(_DEBUG)
     // Enable the debug layer (requires the Graphics Tools "optional feature").
-    // NOTE: Enabling the debug layer after device creation will invalidate the active device.
+    // NOTE: Enabling the debug layer after device creation will invalidate the
+    // active device.
     {
         ComPtr<ID3D12Debug> debugController;
-        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
-        {
+        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
             debugController->EnableDebugLayer();
 
             // Enable additional debug layers.
@@ -51,27 +47,20 @@ void MapViewer::LoadPipeline()
     ComPtr<IDXGIFactory4> factory;
     ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory)));
 
-    if (m_useWarpDevice)
-    {
+    if (m_useWarpDevice) {
         ComPtr<IDXGIAdapter> warpAdapter;
         ThrowIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
 
-        ThrowIfFailed(D3D12CreateDevice(
-            warpAdapter.Get(),
-            D3D_FEATURE_LEVEL_11_0,
-            IID_PPV_ARGS(&m_device)
-            ));
-    }
-    else
-    {
+        ThrowIfFailed(D3D12CreateDevice(warpAdapter.Get(),
+                                        D3D_FEATURE_LEVEL_11_0,
+                                        IID_PPV_ARGS(&m_device)));
+    } else {
         ComPtr<IDXGIAdapter1> hardwareAdapter;
         GetHardwareAdapter(factory.Get(), &hardwareAdapter);
 
-        ThrowIfFailed(D3D12CreateDevice(
-            hardwareAdapter.Get(),
-            D3D_FEATURE_LEVEL_11_0,
-            IID_PPV_ARGS(&m_device)
-            ));
+        ThrowIfFailed(D3D12CreateDevice(hardwareAdapter.Get(),
+                                        D3D_FEATURE_LEVEL_11_0,
+                                        IID_PPV_ARGS(&m_device)));
     }
 
     // Describe and create the command queue.
@@ -79,7 +68,8 @@ void MapViewer::LoadPipeline()
     queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
-    ThrowIfFailed(m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue)));
+    ThrowIfFailed(m_device->CreateCommandQueue(&queueDesc,
+                                               IID_PPV_ARGS(&m_commandQueue)));
 
     // Describe and create the swap chain.
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -93,16 +83,14 @@ void MapViewer::LoadPipeline()
 
     ComPtr<IDXGISwapChain1> swapChain;
     ThrowIfFailed(factory->CreateSwapChainForHwnd(
-        m_commandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
-        Win32Application::GetHwnd(),
-        &swapChainDesc,
-        nullptr,
-        nullptr,
-        &swapChain
-        ));
+        m_commandQueue.Get(), // Swap chain needs the queue so that it can
+                              // force a flush on it.
+        Win32Application::GetHwnd(), &swapChainDesc, nullptr, nullptr,
+        &swapChain));
 
     // This sample does not support fullscreen transitions.
-    ThrowIfFailed(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
+    ThrowIfFailed(factory->MakeWindowAssociation(Win32Application::GetHwnd(),
+                                                 DXGI_MWA_NO_ALT_ENTER));
 
     ThrowIfFailed(swapChain.As(&m_swapChain));
     m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
@@ -114,42 +102,49 @@ void MapViewer::LoadPipeline()
         rtvHeapDesc.NumDescriptors = FrameCount;
         rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-        ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
+        ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc,
+                                                     IID_PPV_ARGS(&m_rtvHeap)));
 
-        m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(
+            D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     }
 
     // Create frame resources.
     {
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
+            m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
 
         // Create a RTV and a command allocator for each frame.
-        for (UINT n = 0; n < FrameCount; n++)
-        {
-            ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
-            m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
+        for (UINT n = 0; n < FrameCount; n++) {
+            ThrowIfFailed(
+                m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
+            m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr,
+                                             rtvHandle);
             rtvHandle.Offset(1, m_rtvDescriptorSize);
 
-            ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocators[n])));
+            ThrowIfFailed(m_device->CreateCommandAllocator(
+                D3D12_COMMAND_LIST_TYPE_DIRECT,
+                IID_PPV_ARGS(&m_commandAllocators[n])));
         }
     }
 }
 
 // Load the sample assets.
-void MapViewer::LoadAssets()
-{
+void MapViewer::LoadAssets() {
     // Create an empty root signature.
     {
         CD3DX12_ROOT_PARAMETER1 constBufferParam;
         constBufferParam.InitAsConstantBufferView(0);
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(1, &constBufferParam, 0, nullptr,
-             D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        rootSignatureDesc.Init_1_1(
+            1, &constBufferParam, 0, nullptr,
+            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
-        ThrowIfFailed(D3D12SerializeVersionedRootSignature(&rootSignatureDesc, &signature, &error));
+        ThrowIfFailed(D3D12SerializeVersionedRootSignature(&rootSignatureDesc,
+                                                           &signature, &error));
         ThrowIfFailed(m_device->CreateRootSignature(
             0, signature->GetBufferPointer(), signature->GetBufferSize(),
             IID_PPV_ARGS(&m_rootSignature)));
@@ -157,27 +152,27 @@ void MapViewer::LoadAssets()
 
     // Create Constant Buffer for per-frame data
     {
-        //TODO: Create the MVP matrices to rotate the object around
-        ConstantBuffer cb {};
+        // TODO: Create the MVP matrices to rotate the object around
+        ConstantBuffer cb{};
         cb.values.x = 0.0;
         cb.values.y = 0.0;
         cb.values.z = 0.0;
         cb.values.w = 1.0;
 
-        D3D12_HEAP_PROPERTIES uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-        D3D12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(cb));
+        D3D12_HEAP_PROPERTIES uploadHeapProps =
+            CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+        D3D12_RESOURCE_DESC bufferDesc =
+            CD3DX12_RESOURCE_DESC::Buffer(sizeof(cb));
 
         ThrowIfFailed(m_device->CreateCommittedResource(
-            &uploadHeapProps,
-            D3D12_HEAP_FLAG_NONE,
-            &bufferDesc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
+            &uploadHeapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
             IID_PPV_ARGS(&m_constBuffer)));
 
-        UINT8* p;
+        UINT8 *p;
         CD3DX12_RANGE readRange(0, 0);
-        ThrowIfFailed(m_constBuffer->Map(0, &readRange, reinterpret_cast<void**>(&p)));
+        ThrowIfFailed(
+            m_constBuffer->Map(0, &readRange, reinterpret_cast<void **>(&p)));
         memcpy(p, &cb, sizeof(cb));
         m_constBuffer->Unmap(0, nullptr);
     }
@@ -196,23 +191,21 @@ void MapViewer::LoadAssets()
 
         ThrowIfFailed(D3DCompileFromFile(
             GetAssetFullPath(L"shaders/shaders.hlsl").c_str(), nullptr, nullptr,
-            "VSMain", "vs_5_1", compileFlags, 0,
-            &vertexShader, nullptr));
+            "VSMain", "vs_5_1", compileFlags, 0, &vertexShader, nullptr));
         ThrowIfFailed(D3DCompileFromFile(
             GetAssetFullPath(L"shaders/shaders.hlsl").c_str(), nullptr, nullptr,
-            "PSMain", "ps_5_1", compileFlags, 0,
-            &pixelShader, nullptr));
+            "PSMain", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
 
         // Define the vertex input layout.
-        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
-        {
-            { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-        };
+        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
+            {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
+             D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+            {"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12,
+             D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}};
 
         // Describe and create the graphics pipeline state object (PSO).
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-        psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
+        psoDesc.InputLayout = {inputElementDescs, _countof(inputElementDescs)};
         psoDesc.pRootSignature = m_rootSignature.Get();
         psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
         psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
@@ -225,11 +218,15 @@ void MapViewer::LoadAssets()
         psoDesc.NumRenderTargets = 1;
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
         psoDesc.SampleDesc.Count = 1;
-        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(
+            &psoDesc, IID_PPV_ARGS(&m_pipelineState)));
     }
 
     // Create the command list.
-    ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)));
+    ThrowIfFailed(m_device->CreateCommandList(
+        0, D3D12_COMMAND_LIST_TYPE_DIRECT,
+        m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get(),
+        IID_PPV_ARGS(&m_commandList)));
 
     // Command lists are created in the recording state, but there is nothing
     // to record yet. The main loop expects it to be closed, so close it now.
@@ -238,80 +235,84 @@ void MapViewer::LoadAssets()
     // Create the vertex buffer.
     {
         // Define the geometry for a triangle.
-        Vertex triangleVertices[] =
-        {
-            { { 0.0f, 0.25f * m_aspectRatio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-            { { 0.25f, -0.25f * m_aspectRatio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-            { { -0.25f, -0.25f * m_aspectRatio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
-        };
+        Vertex triangleVertices[] = {
+            {{0.0f, 0.25f * m_aspectRatio, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
+            {{0.25f, -0.25f * m_aspectRatio, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
+            {{-0.25f, -0.25f * m_aspectRatio, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}}};
 
         const UINT vertexBufferSize = sizeof(triangleVertices);
 
-        // Note: using upload heaps to transfer static data like vert buffers is not 
-        // recommended. Every time the GPU needs it, the upload heap will be marshalled 
-        // over. Please read up on Default Heap usage. An upload heap is used here for 
-        // code simplicity and because there are very few verts to actually transfer.
-        //TODO: Copy the vertex data over to default heap later
-        D3D12_HEAP_PROPERTIES uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-        D3D12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+        // Note: using upload heaps to transfer static data like vert buffers is
+        // not recommended. Every time the GPU needs it, the upload heap will be
+        // marshalled over. Please read up on Default Heap usage. An upload heap
+        // is used here for code simplicity and because there are very few verts
+        // to actually transfer.
+        // TODO: Copy the vertex data over to default heap later
+        D3D12_HEAP_PROPERTIES uploadHeapProps =
+            CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+        D3D12_RESOURCE_DESC bufferDesc =
+            CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
 
         ThrowIfFailed(m_device->CreateCommittedResource(
-            &uploadHeapProps,
-            D3D12_HEAP_FLAG_NONE,
-            &bufferDesc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
+            &uploadHeapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
             IID_PPV_ARGS(&m_vertexBuffer)));
-        //TODO: Copy vertex data to default vram heap
-        //TODO: Also prepare, upload and copy indices data to default vram for loaded models
-        //TODO: Load all different map regions, only render a selected one from the group
+        // TODO: Copy vertex data to default vram heap
+        // TODO: Also prepare, upload and copy indices data to default vram for
+        // loaded models
+        // TODO: Load all different map regions, only render a selected one from
+        // the group
 
         // Copy the triangle data to the vertex buffer.
-        UINT8* pVertexDataBegin;
-        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-        ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+        UINT8 *pVertexDataBegin;
+        CD3DX12_RANGE readRange(
+            0, 0); // We do not intend to read from this resource on the CPU.
+        ThrowIfFailed(m_vertexBuffer->Map(
+            0, &readRange, reinterpret_cast<void **>(&pVertexDataBegin)));
         memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
         m_vertexBuffer->Unmap(0, nullptr);
 
         // Initialize the vertex buffer view.
-        m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+        m_vertexBufferView.BufferLocation =
+            m_vertexBuffer->GetGPUVirtualAddress();
         m_vertexBufferView.StrideInBytes = sizeof(Vertex);
         m_vertexBufferView.SizeInBytes = vertexBufferSize;
     }
 
-    // Create synchronization objects and wait until assets have been uploaded to the GPU.
+    // Create synchronization objects and wait until assets have been uploaded
+    // to the GPU.
     {
-        ThrowIfFailed(m_device->CreateFence(m_fenceValues[m_frameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+        ThrowIfFailed(m_device->CreateFence(m_fenceValues[m_frameIndex],
+                                            D3D12_FENCE_FLAG_NONE,
+                                            IID_PPV_ARGS(&m_fence)));
         m_fenceValues[m_frameIndex]++;
 
         // Create an event handle to use for frame synchronization.
         m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        if (m_fenceEvent == nullptr)
-        {
+        if (m_fenceEvent == nullptr) {
             ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
         }
 
-        // Wait for the command list to execute; we are reusing the same command 
-        // list in our main loop but for now, we just want to wait for setup to 
+        // Wait for the command list to execute; we are reusing the same command
+        // list in our main loop but for now, we just want to wait for setup to
         // complete before continuing.
         WaitForGpu();
     }
 }
 
 // Update frame-based values.
-void MapViewer::OnUpdate()
-{
-}
+void MapViewer::OnUpdate() {}
 
 // Render the scene.
-void MapViewer::OnRender()
-{
-    // Record all the commands we need to render the scene into the command list.
+void MapViewer::OnRender() {
+    // Record all the commands we need to render the scene into the command
+    // list.
     PopulateCommandList();
 
     // Execute the command list.
-    ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
-    m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+    ID3D12CommandList *ppCommandLists[] = {m_commandList.Get()};
+    m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists),
+                                        ppCommandLists);
 
     // Present the frame.
     ThrowIfFailed(m_swapChain->Present(1, 0));
@@ -319,70 +320,71 @@ void MapViewer::OnRender()
     MoveToNextFrame();
 }
 
-void MapViewer::OnDestroy()
-{
-    // Ensure that the GPU is no longer referencing resources that are about to be
-    // cleaned up by the destructor.
+void MapViewer::OnDestroy() {
+    // Ensure that the GPU is no longer referencing resources that are about to
+    // be cleaned up by the destructor.
     WaitForGpu();
 
     CloseHandle(m_fenceEvent);
 }
 
-void MapViewer::PopulateCommandList()
-{
-    // Command list allocators can only be reset when the associated 
-    // command lists have finished execution on the GPU; apps should use 
+void MapViewer::PopulateCommandList() {
+    // Command list allocators can only be reset when the associated
+    // command lists have finished execution on the GPU; apps should use
     // fences to determine GPU execution progress.
     ThrowIfFailed(m_commandAllocators[m_frameIndex]->Reset());
 
-    // However, when ExecuteCommandList() is called on a particular command 
-    // list, that command list can then be reset at any time and must be before 
+    // However, when ExecuteCommandList() is called on a particular command
+    // list, that command list can then be reset at any time and must be before
     // re-recording.
-    ThrowIfFailed(m_commandList->Reset(m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get()));
+    ThrowIfFailed(m_commandList->Reset(m_commandAllocators[m_frameIndex].Get(),
+                                       m_pipelineState.Get()));
 
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-    m_commandList->SetGraphicsRootConstantBufferView(0, m_constBuffer->GetGPUVirtualAddress());
+    m_commandList->SetGraphicsRootConstantBufferView(
+        0, m_constBuffer->GetGPUVirtualAddress());
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
     // Indicate that the back buffer will be used as a render target.
-    D3D12_RESOURCE_BARRIER render_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        m_renderTargets[m_frameIndex].Get(),
-        D3D12_RESOURCE_STATE_PRESENT,
-        D3D12_RESOURCE_STATE_RENDER_TARGET);
+    D3D12_RESOURCE_BARRIER render_barrier =
+        CD3DX12_RESOURCE_BARRIER::Transition(
+            m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT,
+            D3D12_RESOURCE_STATE_RENDER_TARGET);
     m_commandList->ResourceBarrier(1, &render_barrier);
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
-            m_rtvHeap->GetCPUDescriptorHandleForHeapStart(),
-            m_frameIndex, m_rtvDescriptorSize);
+        m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex,
+        m_rtvDescriptorSize);
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
     // Record commands.
-    const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+    const float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     m_commandList->DrawInstanced(3, 1, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
-    D3D12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        m_renderTargets[m_frameIndex].Get(),
-        D3D12_RESOURCE_STATE_RENDER_TARGET,
-        D3D12_RESOURCE_STATE_PRESENT);
+    D3D12_RESOURCE_BARRIER present_barrier =
+        CD3DX12_RESOURCE_BARRIER::Transition(
+            m_renderTargets[m_frameIndex].Get(),
+            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
     m_commandList->ResourceBarrier(1, &present_barrier);
 
     ThrowIfFailed(m_commandList->Close());
 }
 
 // Wait for pending GPU work to complete.
-void MapViewer::WaitForGpu()
-{
+void MapViewer::WaitForGpu() {
     // Schedule a Signal command in the queue.
-    ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex]));
+    ThrowIfFailed(
+        m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex]));
 
     // Wait until the fence has been processed.
-    ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent));
+    ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex],
+                                                m_fenceEvent));
     WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
 
     // Increment the fence value for the current frame.
@@ -390,8 +392,7 @@ void MapViewer::WaitForGpu()
 }
 
 // Prepare to render the next frame.
-void MapViewer::MoveToNextFrame()
-{
+void MapViewer::MoveToNextFrame() {
     // Schedule a Signal command in the queue.
     const UINT64 currentFenceValue = m_fenceValues[m_frameIndex];
     ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), currentFenceValue));
@@ -399,10 +400,11 @@ void MapViewer::MoveToNextFrame()
     // Update the frame index.
     m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
-    // If the next frame is not ready to be rendered yet, wait until it is ready.
-    if (m_fence->GetCompletedValue() < m_fenceValues[m_frameIndex])
-    {
-        ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent));
+    // If the next frame is not ready to be rendered yet, wait until it is
+    // ready.
+    if (m_fence->GetCompletedValue() < m_fenceValues[m_frameIndex]) {
+        ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex],
+                                                    m_fenceEvent));
         WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
     }
 
