@@ -79,6 +79,7 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
 
     switch (message)
     {
+    //TODO: Handle mouse move events to control rotation
     case WM_CREATE:
         {
             // Save the DXSample* passed in to CreateWindow.
