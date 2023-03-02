@@ -109,6 +109,30 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message,
         }
         return 0;
 
+    case WM_LBUTTONDOWN:
+        if (pSample) {
+            pSample->OnMouseLButton(true);
+        }
+        return 0;
+
+    case WM_LBUTTONUP:
+        if (pSample) {
+            pSample->OnMouseLButton(false);
+        }
+        return 0;
+
+    case WM_RBUTTONDOWN:
+        if (pSample) {
+            pSample->OnMouseRButton(true);
+        }
+        return 0;
+
+    case WM_RBUTTONUP:
+        if (pSample) {
+            pSample->OnMouseRButton(false);
+        }
+        return 0;
+
     case WM_PAINT:
         if (pSample) {
             pSample->OnUpdate();
