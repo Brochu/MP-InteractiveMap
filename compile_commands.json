@@ -1,27 +1,27 @@
 [
 {
-  "directory": "C:/Users/Alex/Documents/MP-InteractiveMap/build",
-  "command": "C:\\PROGRA~1\\LLVM\\bin\\CLANG_~1.EXE -IC:/Users/Alex/Documents/MP-InteractiveMap/include -IC:/Users/Alex/Documents/MP-InteractiveMap/include/imgui -IC:/Users/Alex/Documents/MP-InteractiveMap/tracy/public/tracy -g -Xclang -gcodeview -O0 -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -std=gnu++17 -o CMakeFiles\\MP-InteractiveMap.dir\\src\\Main.cpp.obj -c C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\Main.cpp",
+  "directory": "C:/Users/Alex/Documents/MP-InteractiveMap/__build",
+  "command": "C:\\PROGRA~1\\LLVM\\bin\\CLANG_~1.EXE -IC:/Users/Alex/Documents/MP-InteractiveMap/include -IC:/Users/Alex/Documents/MP-InteractiveMap/include/imgui -IC:/Users/Alex/Documents/MP-InteractiveMap/tracy/public/tracy -g -Xclang -gcodeview -O0 -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -std=gnu++20 -o CMakeFiles\\MP-InteractiveMap.dir\\src\\Main.cpp.obj -c C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\Main.cpp",
   "file": "C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\Main.cpp"
 },
 {
-  "directory": "C:/Users/Alex/Documents/MP-InteractiveMap/build",
-  "command": "C:\\PROGRA~1\\LLVM\\bin\\CLANG_~1.EXE -IC:/Users/Alex/Documents/MP-InteractiveMap/include -IC:/Users/Alex/Documents/MP-InteractiveMap/include/imgui -IC:/Users/Alex/Documents/MP-InteractiveMap/tracy/public/tracy -g -Xclang -gcodeview -O0 -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -std=gnu++17 -o CMakeFiles\\MP-InteractiveMap.dir\\src\\stdafx.cpp.obj -c C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\stdafx.cpp",
+  "directory": "C:/Users/Alex/Documents/MP-InteractiveMap/__build",
+  "command": "C:\\PROGRA~1\\LLVM\\bin\\CLANG_~1.EXE -IC:/Users/Alex/Documents/MP-InteractiveMap/include -IC:/Users/Alex/Documents/MP-InteractiveMap/include/imgui -IC:/Users/Alex/Documents/MP-InteractiveMap/tracy/public/tracy -g -Xclang -gcodeview -O0 -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -std=gnu++20 -o CMakeFiles\\MP-InteractiveMap.dir\\src\\stdafx.cpp.obj -c C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\stdafx.cpp",
   "file": "C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\stdafx.cpp"
 },
 {
-  "directory": "C:/Users/Alex/Documents/MP-InteractiveMap/build",
-  "command": "C:\\PROGRA~1\\LLVM\\bin\\CLANG_~1.EXE -IC:/Users/Alex/Documents/MP-InteractiveMap/include -IC:/Users/Alex/Documents/MP-InteractiveMap/include/imgui -IC:/Users/Alex/Documents/MP-InteractiveMap/tracy/public/tracy -g -Xclang -gcodeview -O0 -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -std=gnu++17 -o CMakeFiles\\MP-InteractiveMap.dir\\src\\Win32Application.cpp.obj -c C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\Win32Application.cpp",
+  "directory": "C:/Users/Alex/Documents/MP-InteractiveMap/__build",
+  "command": "C:\\PROGRA~1\\LLVM\\bin\\CLANG_~1.EXE -IC:/Users/Alex/Documents/MP-InteractiveMap/include -IC:/Users/Alex/Documents/MP-InteractiveMap/include/imgui -IC:/Users/Alex/Documents/MP-InteractiveMap/tracy/public/tracy -g -Xclang -gcodeview -O0 -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -std=gnu++20 -o CMakeFiles\\MP-InteractiveMap.dir\\src\\Win32Application.cpp.obj -c C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\Win32Application.cpp",
   "file": "C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\Win32Application.cpp"
 },
 {
-  "directory": "C:/Users/Alex/Documents/MP-InteractiveMap/build",
-  "command": "C:\\PROGRA~1\\LLVM\\bin\\CLANG_~1.EXE -IC:/Users/Alex/Documents/MP-InteractiveMap/include -IC:/Users/Alex/Documents/MP-InteractiveMap/include/imgui -IC:/Users/Alex/Documents/MP-InteractiveMap/tracy/public/tracy -g -Xclang -gcodeview -O0 -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -std=gnu++17 -o CMakeFiles\\MP-InteractiveMap.dir\\src\\DXSample.cpp.obj -c C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\DXSample.cpp",
+  "directory": "C:/Users/Alex/Documents/MP-InteractiveMap/__build",
+  "command": "C:\\PROGRA~1\\LLVM\\bin\\CLANG_~1.EXE -IC:/Users/Alex/Documents/MP-InteractiveMap/include -IC:/Users/Alex/Documents/MP-InteractiveMap/include/imgui -IC:/Users/Alex/Documents/MP-InteractiveMap/tracy/public/tracy -g -Xclang -gcodeview -O0 -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -std=gnu++20 -o CMakeFiles\\MP-InteractiveMap.dir\\src\\DXSample.cpp.obj -c C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\DXSample.cpp",
   "file": "C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\DXSample.cpp"
 },
 {
-  "directory": "C:/Users/Alex/Documents/MP-InteractiveMap/build",
-  "command": "C:\\PROGRA~1\\LLVM\\bin\\CLANG_~1.EXE -IC:/Users/Alex/Documents/MP-InteractiveMap/include -IC:/Users/Alex/Documents/MP-InteractiveMap/include/imgui -IC:/Users/Alex/Documents/MP-InteractiveMap/tracy/public/tracy -g -Xclang -gcodeview -O0 -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -std=gnu++17 -o CMakeFiles\\MP-InteractiveMap.dir\\src\\MapViewer.cpp.obj -c C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\MapViewer.cpp",
+  "directory": "C:/Users/Alex/Documents/MP-InteractiveMap/__build",
+  "command": "C:\\PROGRA~1\\LLVM\\bin\\CLANG_~1.EXE -IC:/Users/Alex/Documents/MP-InteractiveMap/include -IC:/Users/Alex/Documents/MP-InteractiveMap/include/imgui -IC:/Users/Alex/Documents/MP-InteractiveMap/tracy/public/tracy -g -Xclang -gcodeview -O0 -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -std=gnu++20 -o CMakeFiles\\MP-InteractiveMap.dir\\src\\MapViewer.cpp.obj -c C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\MapViewer.cpp",
   "file": "C:\\Users\\Alex\\Documents\\MP-InteractiveMap\\src\\MapViewer.cpp"
 }
 ]
