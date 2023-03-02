@@ -79,7 +79,6 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
 
     switch (message)
     {
-    //TODO: Handle mouse move events to control rotation
     case WM_CREATE:
         {
             // Save the DXSample* passed in to CreateWindow.
@@ -99,6 +98,21 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
         if (pSample)
         {
             pSample->OnKeyUp(static_cast<UINT8>(wParam));
+        }
+        return 0;
+
+    case WM_MOUSEMOVE:
+        if (pSample)
+        {
+            auto pt = MAKEPOINTS(lParam);
+            pSample->OnMouseMove(pt.x, pt.y);
+        }
+        return 0;
+
+    case WM_MOUSEWHEEL:
+        if (pSample)
+        {
+            pSample->OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam));
         }
         return 0;
 
