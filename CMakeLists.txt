@@ -47,7 +47,7 @@ set (libs
     d3dcompiler.lib
     dxgi.lib
 
-    #assimp-vc143-mt.lib
+    assimp-vc143-mt.lib
 )
 
 add_executable (MP-InteractiveMap WIN32
