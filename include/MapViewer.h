@@ -26,10 +26,12 @@ class MapViewer : public DXSample {
 public:
     MapViewer(UINT width, UINT height, std::wstring name);
 
-    virtual void OnInit();
-    virtual void OnUpdate();
-    virtual void OnRender();
-    virtual void OnDestroy();
+    virtual void OnInit() override;
+    virtual void OnUpdate() override;
+    virtual void OnRender() override;
+    virtual void OnDestroy() override;
+
+    virtual void OnMouseMove(short x, short y) override;
 
 private:
     // In this sample we overload the meaning of FrameCount to mean both the
@@ -75,6 +77,11 @@ private:
     HANDLE m_fenceEvent;
     ComPtr<ID3D12Fence> m_fence;
     UINT64 m_fenceValues[FrameCount];
+
+    UINT m_width = 0;
+    UINT m_height = 0;
+    short m_mx = 0;
+    short m_my = 0;
 
     void LoadPipeline();
     void LoadAssets();

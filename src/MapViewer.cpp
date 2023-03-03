@@ -21,9 +21,9 @@
 #include <format>
 
 MapViewer::MapViewer(UINT width, UINT height, std::wstring name)
-    : DXSample(width, height, name), m_frameIndex(0),
-      m_viewport(0.0f, 0.0f, static_cast<float>(width),
-                 static_cast<float>(height)),
+    : DXSample(width, height, name), m_frameIndex(0), m_width(width),
+      m_height(height), m_viewport(0.0f, 0.0f, static_cast<float>(width),
+                                   static_cast<float>(height)),
       m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height)),
       m_fenceValues{}, m_rtvDescriptorSize(0) {}
 
@@ -159,7 +159,6 @@ void MapViewer::LoadAssets() {
 
     // Create Constant Buffer for per-frame data
     {
-        // TODO: Create the MVP matrices to rotate the object around
         ConstantBuffer cb{};
         cb.values.x = 0.0;
         cb.values.y = 0.0;
@@ -333,7 +332,21 @@ void MapViewer::LoadAssets() {
 }
 
 // Update frame-based values.
-void MapViewer::OnUpdate() {}
+void MapViewer::OnUpdate() {
+    // TODO: Create the MVP matrices to rotate the object around
+    ConstantBuffer cb{};
+    cb.values.x = 0.0;
+    cb.values.y = (float)m_mx / m_width;
+    cb.values.z = (float)m_my / m_height;
+    cb.values.w = 1.0;
+
+    UINT8 *p;
+    CD3DX12_RANGE readRange(0, 0);
+    ThrowIfFailed(
+        m_constBuffer->Map(0, &readRange, reinterpret_cast<void **>(&p)));
+    memcpy(p, &cb, sizeof(cb));
+    m_constBuffer->Unmap(0, nullptr);
+}
 
 // Render the scene.
 void MapViewer::OnRender() {
@@ -358,6 +371,11 @@ void MapViewer::OnDestroy() {
     WaitForGpu();
 
     CloseHandle(m_fenceEvent);
+}
+
+void MapViewer::OnMouseMove(short x, short y) {
+    m_mx = x;
+    m_my = y;
 }
 
 void MapViewer::PopulateCommandList() {
