@@ -12,6 +12,7 @@
 #pragma once
 
 #include "DXSample.h"
+#include <DirectXMath.h>
 
 using namespace DirectX;
 
@@ -32,6 +33,7 @@ public:
     virtual void OnDestroy() override;
 
     virtual void OnMouseMove(short x, short y) override;
+    virtual void OnMouseWheel(short z) override;
 
 private:
     // In this sample we overload the meaning of FrameCount to mean both the
@@ -50,7 +52,8 @@ private:
     };
 
     struct ConstantBuffer {
-        XMFLOAT4 values;
+        XMMATRIX mvp;
+        XMMATRIX world;
     };
 
     // Pipeline objects.
@@ -80,8 +83,12 @@ private:
 
     UINT m_width = 0;
     UINT m_height = 0;
-    short m_mx = 0;
-    short m_my = 0;
+
+    XMMATRIX m_rotation = XMMatrixIdentity();
+    FXMVECTOR m_camera = {0.0, 0.0, -10.0, 1.0};
+    FXMVECTOR m_lookat = {0.0, 0.0, 0.0, 1.0};
+    FXMVECTOR m_updir = {0.0, 1.0, 0.0, 0.0};
+    float m_fov = 45.0;
 
     void LoadPipeline();
     void LoadAssets();

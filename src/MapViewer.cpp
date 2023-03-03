@@ -159,11 +159,7 @@ void MapViewer::LoadAssets() {
 
     // Create Constant Buffer for per-frame data
     {
-        ConstantBuffer cb{};
-        cb.values.x = 0.0;
-        cb.values.y = 0.0;
-        cb.values.z = 0.0;
-        cb.values.w = 1.0;
+        ConstantBuffer cb{XMMatrixIdentity(), XMMatrixIdentity()};
 
         D3D12_HEAP_PROPERTIES uploadHeapProps =
             CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -242,7 +238,6 @@ void MapViewer::LoadAssets() {
 
         for (auto &world : worlds) {
             std::string filepath = std::format("data/{}.obj", world);
-            printf("Loading model file : %s\n", filepath.c_str());
 
             Assimp::Importer importer;
             const aiScene *scene = importer.ReadFile(
@@ -251,10 +246,11 @@ void MapViewer::LoadAssets() {
                     aiProcessPreset_TargetRealtime_MaxQuality |
                     aiProcess_PreTransformVertices);
 
-            printf("[SCENE] numVertices = %i\n",
-                   scene->mMeshes[0]->mNumVertices);
-            printf("[SCENE] numFaces = %i\n", scene->mMeshes[0]->mNumFaces);
-            //TODO: Prepare vertex + index buffers for each maps
+            // for (UINT i = 0; i < scene->mNumMeshes; i++) {
+            // }
+            // for (UINT i = 0; i < scene->mMeshes[0]->mNumFaces; i++) {
+            // }
+            // TODO: Prepare vertex + index buffers for each maps
         }
     }
 
@@ -334,12 +330,22 @@ void MapViewer::LoadAssets() {
 
 // Update frame-based values.
 void MapViewer::OnUpdate() {
-    // TODO: Create the MVP matrices to rotate the object around
-    ConstantBuffer cb{};
-    cb.values.x = 0.0;
-    cb.values.y = (float)m_mx / m_width;
-    cb.values.z = (float)m_my / m_height;
-    cb.values.w = 1.0;
+    //TODO: Debug this logic
+    XMMATRIX model = XMMatrixIdentity();
+    model = XMMatrixMultiply(model, m_rotation);
+
+    XMMATRIX view = XMMatrixLookAtLH(m_camera, m_lookat, m_updir);
+
+    float aspect = (float)m_width / m_height;
+    XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov),
+                                                   aspect, 0.1f, 100000.0f);
+
+    XMMATRIX mvp = XMMatrixMultiply(model, view);
+    mvp = XMMatrixMultiply(mvp, projection);
+    XMMATRIX world =
+        XMMatrixTranspose(model); // Need to convert local space to world space
+
+    ConstantBuffer cb{mvp, world};
 
     UINT8 *p;
     CD3DX12_RANGE readRange(0, 0);
@@ -374,10 +380,9 @@ void MapViewer::OnDestroy() {
     CloseHandle(m_fenceEvent);
 }
 
-void MapViewer::OnMouseMove(short x, short y) {
-    m_mx = x;
-    m_my = y;
-}
+void MapViewer::OnMouseMove(short x, short y) {}
+
+void MapViewer::OnMouseWheel(short z) {}
 
 void MapViewer::PopulateCommandList() {
     // Command list allocators can only be reset when the associated
