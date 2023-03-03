@@ -235,6 +235,8 @@ void MapViewer::LoadAssets() {
     // Load model data
     {
         std::string filepath = "data/RuinsWorld.obj";
+        printf("Loading model file : %s\n", filepath.c_str());
+
         Assimp::Importer importer;
         const aiScene *scene = importer.ReadFile(
             filepath.c_str(), aiProcess_ConvertToLeftHanded |

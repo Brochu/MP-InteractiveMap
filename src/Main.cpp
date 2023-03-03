@@ -15,11 +15,12 @@
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     MapViewer sample(800, 600, L"MP - Interactive Map");
 
-    #if _DEBUG
+#if _DEBUG
     AllocConsole();
-    freopen("CONOUT$", "wb", stdout); // Redirect stdout to the newly created console
-    #endif
-
+    FILE *f;
+    freopen_s(&f, "CONOUT$", "wb",
+              stdout); // Redirect stdout to the newly created console
+#endif
 
     return Win32Application::Run(&sample, hInstance, nCmdShow);
 }
