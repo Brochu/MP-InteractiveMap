@@ -254,6 +254,7 @@ void MapViewer::LoadAssets() {
             printf("[SCENE] numVertices = %i\n",
                    scene->mMeshes[0]->mNumVertices);
             printf("[SCENE] numFaces = %i\n", scene->mMeshes[0]->mNumFaces);
+            //TODO: Prepare vertex + index buffers for each maps
         }
     }
 
