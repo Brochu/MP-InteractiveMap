@@ -11,11 +11,11 @@
 
 #include "MapViewer.h"
 
-#include "stdafx.h"
 #include "assimp/Importer.hpp"
 #include "assimp/mesh.h"
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"
+#include "stdafx.h"
 
 MapViewer::MapViewer(UINT width, UINT height, std::wstring name)
     : DXSample(width, height, name), m_frameIndex(0),
@@ -236,10 +236,10 @@ void MapViewer::LoadAssets() {
     {
         std::string filepath = "data/RuinsWorld.obj";
         Assimp::Importer importer;
-        const aiScene *scene = importer.ReadFile(filepath.c_str(),
-                                                 aiProcess_ConvertToLeftHanded |
-                                                 aiProcessPreset_TargetRealtime_MaxQuality | 
-                                                 aiProcess_PreTransformVertices);
+        const aiScene *scene = importer.ReadFile(
+            filepath.c_str(), aiProcess_ConvertToLeftHanded |
+                                  aiProcessPreset_TargetRealtime_MaxQuality |
+                                  aiProcess_PreTransformVertices);
 
         /*std::vector<aiNode*> stack;
         stack.push_back(scene->mRootNode);
@@ -278,7 +278,8 @@ void MapViewer::LoadAssets() {
                 //draws.materialIndices.push_back(m->mMaterialIndex);
 
                 // Indices that were added need to be drawn
-                //draws.indexCounts.push_back(indices.size() - draws.indexOffsets[draws.indexOffsets.size() - 1]);
+                //draws.indexCounts.push_back(indices.size() -
+        draws.indexOffsets[draws.indexOffsets.size() - 1]);
                 //draws.numDraws++;
             }
 
@@ -340,7 +341,7 @@ void MapViewer::LoadAssets() {
     // to record yet. The main loop expects it to be closed, so close it now.
     ThrowIfFailed(m_commandList->Close());
 
-    //TODO: Execute command list to start upload process
+    // TODO: Execute command list to start upload process
 
     // Create synchronization objects and wait until assets have been uploaded
     // to the GPU.
