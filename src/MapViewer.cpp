@@ -17,6 +17,9 @@
 #include "assimp/scene.h"
 #include "stdafx.h"
 
+#include <array>
+#include <format>
+
 MapViewer::MapViewer(UINT width, UINT height, std::wstring name)
     : DXSample(width, height, name), m_frameIndex(0),
       m_viewport(0.0f, 0.0f, static_cast<float>(width),
@@ -232,64 +235,27 @@ void MapViewer::LoadAssets() {
         m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get(),
         IID_PPV_ARGS(&m_commandList)));
 
-    // Load model data
+    // Load 3D model map data
     {
-        std::string filepath = "data/RuinsWorld.obj";
-        printf("Loading model file : %s\n", filepath.c_str());
+        static const std::array<std::string, 7> worlds{
+            "IntroWorld", "RuinsWorld", "IceWorld",   "OverWorld",
+            "MinesWorld", "LavaWorld",  "CraterWorld"};
 
-        Assimp::Importer importer;
-        const aiScene *scene = importer.ReadFile(
-            filepath.c_str(), aiProcess_ConvertToLeftHanded |
-                                  aiProcessPreset_TargetRealtime_MaxQuality |
-                                  aiProcess_PreTransformVertices);
+        for (auto &world : worlds) {
+            std::string filepath = std::format("data/{}.obj", world);
+            printf("Loading model file : %s\n", filepath.c_str());
 
-        /*std::vector<aiNode*> stack;
-        stack.push_back(scene->mRootNode);
+            Assimp::Importer importer;
+            const aiScene *scene = importer.ReadFile(
+                filepath.c_str(),
+                aiProcess_ConvertToLeftHanded |
+                    aiProcessPreset_TargetRealtime_MaxQuality |
+                    aiProcess_PreTransformVertices);
 
-        while (stack.size() > 0) {
-            aiNode *current = stack.back();
-            stack.pop_back();
-
-            for (unsigned int i = 0; i < current->mNumMeshes; i++) {
-                // Track vert/ind offsets for next draw call
-                //draws.vertexOffsets.push_back(vertices.size());
-                //draws.indexOffsets.push_back(indices.size());
-
-                aiMesh *m = scene->mMeshes[current->mMeshes[i]];
-
-                for (unsigned int j = 0; j < m->mNumVertices; j++) {
-                    const auto pos = m->mVertices[j];
-                    const auto normal = m->mNormals[j];
-                    const auto uv = m->mTextureCoords[0][j];
-
-                    //vertices.push_back(
-                    //    {{ pos.x, pos.y, pos.z },
-                    //    { normal.x, normal.y, normal.z },
-                    //    { uv.x, uv.y }}
-                    //);
-                }
-
-                for (unsigned int j = 0; j < m->mNumFaces; j++) {
-                    aiFace f = m->mFaces[j];
-
-                    for (unsigned int k = 0; k < f.mNumIndices; k++) {
-                        //indices.push_back(f.mIndices[k]);
-                    }
-                }
-
-                //draws.materialIndices.push_back(m->mMaterialIndex);
-
-                // Indices that were added need to be drawn
-                //draws.indexCounts.push_back(indices.size() -
-        draws.indexOffsets[draws.indexOffsets.size() - 1]);
-                //draws.numDraws++;
-            }
-
-            for (unsigned int i = 0; i < current->mNumChildren; i++) {
-                // Breath first traversal of assimp tree
-                stack.push_back(current->mChildren[i]);
-            }
-        }*/
+            printf("[SCENE] numVertices = %i\n",
+                   scene->mMeshes[0]->mNumVertices);
+            printf("[SCENE] numFaces = %i\n", scene->mMeshes[0]->mNumFaces);
+        }
     }
 
     // Create the vertex buffer.
