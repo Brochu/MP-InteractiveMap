@@ -14,6 +14,8 @@ cbuffer PerFrame : register(b0) {
     float4x4 world;
 };
 
+cbuffer PerDraw : register(b1) { uint val; }
+
 struct PSInput {
     float4 position : SV_POSITION;
 };
@@ -26,4 +28,9 @@ PSInput VSMain(float4 position : POSITION) {
     return result;
 }
 
-float4 PSMain(PSInput input) : SV_TARGET { return float4(0.41, 0.13, 0.0, 0.5); }
+float4 PSMain(PSInput input) : SV_TARGET {
+    if (val > 0) {
+        return float4(0.71, 0.43, 0.30, 1.0);
+    }
+    return float4(0.41, 0.13, 0.0, 0.5);
+}

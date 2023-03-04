@@ -129,9 +129,12 @@ void MapViewer::LoadAssets() {
         CD3DX12_ROOT_PARAMETER1 constBufferParam;
         constBufferParam.InitAsConstantBufferView(0);
 
+        CD3DX12_ROOT_PARAMETER1 constParam;
+        constParam.InitAsConstants(4, 1);
+        CD3DX12_ROOT_PARAMETER1 params[]{constBufferParam, constParam};
+
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(1, &constBufferParam, 0, nullptr,
-                                   D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        rootSignatureDesc.Init_1_1(2, params, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
@@ -195,6 +198,11 @@ void MapViewer::LoadAssets() {
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
         psoDesc.SampleDesc.Count = 1;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+        D3D12_RASTERIZER_DESC wireRaster = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        wireRaster.FillMode = D3D12_FILL_MODE_WIREFRAME;
+        psoDesc.RasterizerState = wireRaster;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_wirePipelineState)));
     }
 
     // Create the command list.
@@ -385,6 +393,7 @@ void MapViewer::PopulateCommandList() {
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     m_commandList->SetGraphicsRootConstantBufferView(0, m_constBuffer->GetGPUVirtualAddress());
+    m_commandList->SetGraphicsRoot32BitConstant(1, 0, 0);
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
@@ -405,6 +414,11 @@ void MapViewer::PopulateCommandList() {
     m_commandList->IASetIndexBuffer(&m_indexBufferView);
     // TODO: Need to figure out offsets for maps past the first one
     m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[0], 1, 0, 0, 0);
+
+    m_commandList->SetPipelineState(m_wirePipelineState.Get());
+    m_commandList->SetGraphicsRoot32BitConstant(1, 1, 0);
+    m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[0], 1, 0, 0, 0);
+    m_commandList->SetPipelineState(m_pipelineState.Get());
 
     // Indicate that the back buffer will now be used to present.
     D3D12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
