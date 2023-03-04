@@ -47,8 +47,13 @@ private:
     static const UINT FrameCount = 2;
 
     struct Vertex {
+        Vertex(float x, float y, float z) {
+            position.x = x;
+            position.y = y;
+            position.z = z;
+        }
+
         XMFLOAT3 position;
-        XMFLOAT4 color;
     };
 
     struct ConstantBuffer {
@@ -72,8 +77,10 @@ private:
 
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
+    ComPtr<ID3D12Resource> m_indexBuffer;
     ComPtr<ID3D12Resource> m_constBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+    D3D12_VERTEX_BUFFER_VIEW m_indexBufferView;
 
     // Synchronization objects.
     UINT m_frameIndex;
@@ -89,6 +96,9 @@ private:
     FXMVECTOR m_lookat = {0.0, 0.0, 0.0, 1.0};
     FXMVECTOR m_updir = {0.0, 1.0, 0.0, 0.0};
     float m_fov = 45.0;
+
+    std::vector<size_t> m_vertOffsets;
+    std::vector<size_t> m_indOffsets;
 
     void LoadPipeline();
     void LoadAssets();

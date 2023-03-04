@@ -177,8 +177,8 @@ void MapViewer::LoadAssets() {
 
         // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
-            {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-            {"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}};
+            {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+        };
 
         // Describe and create the graphics pipeline state object (PSO).
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -204,6 +204,10 @@ void MapViewer::LoadAssets() {
                                               IID_PPV_ARGS(&m_commandList)));
 
     // Load 3D model map data
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+    m_vertOffsets = {};
+    m_indOffsets = {};
     {
         static const std::array<std::string, 7> worlds{"IntroWorld", "RuinsWorld", "IceWorld",   "OverWorld",
                                                        "MinesWorld", "LavaWorld",  "CraterWorld"};
@@ -215,23 +219,25 @@ void MapViewer::LoadAssets() {
             const aiScene *scene = importer.ReadFile(filepath.c_str(), aiProcess_ConvertToLeftHanded |
                                                                            aiProcessPreset_TargetRealtime_MaxQuality |
                                                                            aiProcess_PreTransformVertices);
+            aiMesh *mesh = scene->mMeshes[0]; // For the map models, we only have one mesh
 
-            // for (UINT i = 0; i < scene->mNumMeshes; i++) {
-            // }
-            // for (UINT i = 0; i < scene->mMeshes[0]->mNumFaces; i++) {
-            // }
-            // TODO: Prepare vertex + index buffers for each maps
+            for (UINT i = 0; i < mesh->mNumVertices; i++) {
+                aiVector3D vert = mesh->mVertices[i];
+                vertices.emplace_back(vert.x, vert.y, vert.z);
+            }
+            for (UINT i = 0; i < mesh->mNumFaces; i++) {
+                for (UINT j = 0; j < mesh->mFaces[i].mNumIndices; j++) {
+                    indices.emplace_back(mesh->mFaces[i].mIndices[j]);
+                }
+            }
+            m_vertOffsets.emplace_back(vertices.size());
+            m_indOffsets.emplace_back(indices.size());
         }
     }
 
     // Create the vertex buffer.
     {
-        // Define the geometry for a triangle.
-        Vertex triangleVertices[] = {{{0.0f, 0.25f * m_aspectRatio, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
-                                     {{0.25f, -0.25f * m_aspectRatio, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
-                                     {{-0.25f, -0.25f * m_aspectRatio, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}}};
-
-        const UINT vertexBufferSize = sizeof(triangleVertices);
+        const UINT vertexBufferSize = sizeof(Vertex) * (UINT)vertices.size();
 
         // Note: using upload heaps to transfer static data like vert buffers is
         // not recommended. Every time the GPU needs it, the upload heap will be
@@ -255,7 +261,7 @@ void MapViewer::LoadAssets() {
         UINT8 *pVertexDataBegin;
         CD3DX12_RANGE readRange(0, 0); // We do not intend to read from this resource on the CPU.
         ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void **>(&pVertexDataBegin)));
-        memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
+        memcpy(pVertexDataBegin, vertices.data(), sizeof(Vertex) * vertices.size());
         m_vertexBuffer->Unmap(0, nullptr);
 
         // Initialize the vertex buffer view.
@@ -375,7 +381,7 @@ void MapViewer::PopulateCommandList() {
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    m_commandList->DrawInstanced(3, 1, 0, 0);
+    m_commandList->DrawInstanced((UINT)m_vertOffsets[0], 1, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     D3D12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
