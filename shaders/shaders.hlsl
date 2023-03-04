@@ -26,4 +26,4 @@ PSInput VSMain(float4 position : POSITION) {
     return result;
 }
 
-float4 PSMain(PSInput input) : SV_TARGET { return float4(0.0, 0.0, 0.0, 1.0); }
+float4 PSMain(PSInput input) : SV_TARGET { return float4(0.41, 0.13, 0.0, 0.5); }

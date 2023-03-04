@@ -77,10 +77,11 @@ private:
 
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
-    ComPtr<ID3D12Resource> m_indexBuffer;
-    ComPtr<ID3D12Resource> m_constBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
-    D3D12_VERTEX_BUFFER_VIEW m_indexBufferView;
+    ComPtr<ID3D12Resource> m_indexBuffer;
+    D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
+
+    ComPtr<ID3D12Resource> m_constBuffer;
 
     // Synchronization objects.
     UINT m_frameIndex;
@@ -92,7 +93,7 @@ private:
     UINT m_height = 0;
 
     XMMATRIX m_rotation = XMMatrixIdentity();
-    FXMVECTOR m_camera = {0.0, 0.0, -10.0, 1.0};
+    FXMVECTOR m_camera = {0.0, 150.0, -600.0, 1.0};
     FXMVECTOR m_lookat = {0.0, 0.0, 0.0, 1.0};
     FXMVECTOR m_updir = {0.0, 1.0, 0.0, 0.0};
     float m_fov = 45.0;

@@ -177,8 +177,7 @@ void MapViewer::LoadAssets() {
 
         // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
-            {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
-        };
+            {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}};
 
         // Describe and create the graphics pipeline state object (PSO).
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -238,6 +237,7 @@ void MapViewer::LoadAssets() {
     // Create the vertex buffer.
     {
         const UINT vertexBufferSize = sizeof(Vertex) * (UINT)vertices.size();
+        const UINT indexBufferSize = sizeof(unsigned int) * (UINT)indices.size();
 
         // Note: using upload heaps to transfer static data like vert buffers is
         // not recommended. Every time the GPU needs it, the upload heap will be
@@ -246,11 +246,17 @@ void MapViewer::LoadAssets() {
         // to actually transfer.
         // TODO: Copy the vertex data over to default heap later
         D3D12_HEAP_PROPERTIES uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-        D3D12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+        D3D12_RESOURCE_DESC vBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
 
-        ThrowIfFailed(m_device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
+        ThrowIfFailed(m_device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &vBufferDesc,
                                                         D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
                                                         IID_PPV_ARGS(&m_vertexBuffer)));
+
+        D3D12_RESOURCE_DESC iBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
+
+        ThrowIfFailed(m_device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &iBufferDesc,
+                                                        D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+                                                        IID_PPV_ARGS(&m_indexBuffer)));
         // TODO: Copy vertex data to default vram heap
         // TODO: Also prepare, upload and copy indices data to default vram for
         // loaded models
@@ -261,13 +267,22 @@ void MapViewer::LoadAssets() {
         UINT8 *pVertexDataBegin;
         CD3DX12_RANGE readRange(0, 0); // We do not intend to read from this resource on the CPU.
         ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void **>(&pVertexDataBegin)));
-        memcpy(pVertexDataBegin, vertices.data(), sizeof(Vertex) * vertices.size());
+        memcpy(pVertexDataBegin, vertices.data(), vertexBufferSize);
         m_vertexBuffer->Unmap(0, nullptr);
 
         // Initialize the vertex buffer view.
         m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
         m_vertexBufferView.StrideInBytes = sizeof(Vertex);
         m_vertexBufferView.SizeInBytes = vertexBufferSize;
+
+        UINT8 *pIndexDataBegin;
+        ThrowIfFailed(m_indexBuffer->Map(0, &readRange, reinterpret_cast<void **>(&pIndexDataBegin)));
+        memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
+        m_indexBuffer->Unmap(0, nullptr);
+
+        m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
+        m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+        m_indexBufferView.SizeInBytes = indexBufferSize;
     }
 
     // Command lists are created in the recording state, but there is nothing
@@ -377,11 +392,13 @@ void MapViewer::PopulateCommandList() {
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
     // Record commands.
-    const float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
+    const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    m_commandList->DrawInstanced((UINT)m_vertOffsets[0], 1, 0, 0);
+    m_commandList->IASetIndexBuffer(&m_indexBufferView);
+    // TODO: Need to figure out offsets for maps past the first one
+    m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[0], 1, 0, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     D3D12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
