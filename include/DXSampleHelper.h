@@ -34,8 +34,8 @@ private:
     const HRESULT m_hr;
 };
 
-#define SAFE_RELEASE(p)                                                        \
-    if (p)                                                                     \
+#define SAFE_RELEASE(p)                                                                                                \
+    if (p)                                                                                                             \
     (p)->Release()
 
 inline void ThrowIfFailed(HRESULT hr) {
@@ -73,23 +73,18 @@ inline HRESULT ReadDataFromFile(LPCWSTR filename, byte **data, UINT *size) {
     extendedParams.lpSecurityAttributes = nullptr;
     extendedParams.hTemplateFile = nullptr;
 
-    Wrappers::FileHandle file(CreateFile2(filename, GENERIC_READ,
-                                          FILE_SHARE_READ, OPEN_EXISTING,
-                                          &extendedParams));
+    Wrappers::FileHandle file(CreateFile2(filename, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, &extendedParams));
 #else
     Wrappers::FileHandle file(CreateFile(
         filename, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN |
-            SECURITY_SQOS_PRESENT | SECURITY_ANONYMOUS,
-        nullptr));
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN | SECURITY_SQOS_PRESENT | SECURITY_ANONYMOUS, nullptr));
 #endif
     if (file.Get() == INVALID_HANDLE_VALUE) {
         throw std::exception();
     }
 
     FILE_STANDARD_INFO fileInfo = {};
-    if (!GetFileInformationByHandleEx(file.Get(), FileStandardInfo, &fileInfo,
-                                      sizeof(fileInfo))) {
+    if (!GetFileInformationByHandleEx(file.Get(), FileStandardInfo, &fileInfo, sizeof(fileInfo))) {
         throw std::exception();
     }
 
@@ -100,16 +95,14 @@ inline HRESULT ReadDataFromFile(LPCWSTR filename, byte **data, UINT *size) {
     *data = reinterpret_cast<byte *>(malloc(fileInfo.EndOfFile.LowPart));
     *size = fileInfo.EndOfFile.LowPart;
 
-    if (!ReadFile(file.Get(), *data, fileInfo.EndOfFile.LowPart, nullptr,
-                  nullptr)) {
+    if (!ReadFile(file.Get(), *data, fileInfo.EndOfFile.LowPart, nullptr, nullptr)) {
         throw std::exception();
     }
 
     return S_OK;
 }
 
-inline HRESULT ReadDataFromDDSFile(LPCWSTR filename, byte **data, UINT *offset,
-                                   UINT *size) {
+inline HRESULT ReadDataFromDDSFile(LPCWSTR filename, byte **data, UINT *offset, UINT *size) {
     if (FAILED(ReadDataFromFile(filename, data, size))) {
         return E_FAIL;
     }
@@ -150,8 +143,7 @@ inline HRESULT ReadDataFromDDSFile(LPCWSTR filename, byte **data, UINT *offset,
     };
 
     auto ddsHeader = reinterpret_cast<const DDS_HEADER *>(*data + sizeof(UINT));
-    if (ddsHeader->size != sizeof(DDS_HEADER) ||
-        ddsHeader->ddsPixelFormat.size != sizeof(DDS_PIXELFORMAT)) {
+    if (ddsHeader->size != sizeof(DDS_HEADER) || ddsHeader->ddsPixelFormat.size != sizeof(DDS_PIXELFORMAT)) {
         return E_FAIL;
     }
 
@@ -164,9 +156,7 @@ inline HRESULT ReadDataFromDDSFile(LPCWSTR filename, byte **data, UINT *offset,
 
 // Assign a name to the object to aid with debugging.
 #if defined(_DEBUG) || defined(DBG)
-inline void SetName(ID3D12Object *pObject, LPCWSTR name) {
-    pObject->SetName(name);
-}
+inline void SetName(ID3D12Object *pObject, LPCWSTR name) { pObject->SetName(name); }
 inline void SetNameIndexed(ID3D12Object *pObject, LPCWSTR name, UINT index) {
     WCHAR fullName[50];
     if (swprintf_s(fullName, L"%s[%u]", name, index) > 0) {
@@ -191,9 +181,8 @@ inline UINT CalculateConstantBufferByteSize(UINT byteSize) {
 }
 
 #ifdef D3D_COMPILE_STANDARD_FILE_INCLUDE
-inline Microsoft::WRL::ComPtr<ID3DBlob>
-CompileShader(const std::wstring &filename, const D3D_SHADER_MACRO *defines,
-              const std::string &entrypoint, const std::string &target) {
+inline Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(const std::wstring &filename, const D3D_SHADER_MACRO *defines,
+                                                      const std::string &entrypoint, const std::string &target) {
     UINT compileFlags = 0;
 #if defined(_DEBUG) || defined(DBG)
     compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -203,10 +192,8 @@ CompileShader(const std::wstring &filename, const D3D_SHADER_MACRO *defines,
 
     Microsoft::WRL::ComPtr<ID3DBlob> byteCode = nullptr;
     Microsoft::WRL::ComPtr<ID3DBlob> errors;
-    hr = D3DCompileFromFile(filename.c_str(), defines,
-                            D3D_COMPILE_STANDARD_FILE_INCLUDE,
-                            entrypoint.c_str(), target.c_str(), compileFlags, 0,
-                            &byteCode, &errors);
+    hr = D3DCompileFromFile(filename.c_str(), defines, D3D_COMPILE_STANDARD_FILE_INCLUDE, entrypoint.c_str(),
+                            target.c_str(), compileFlags, 0, &byteCode, &errors);
 
     if (errors != nullptr) {
         OutputDebugStringA((char *)errors->GetBufferPointer());

@@ -15,8 +15,7 @@
 
 HWND Win32Application::m_hwnd = nullptr;
 
-int Win32Application::Run(DXSample *pSample, HINSTANCE hInstance,
-                          int nCmdShow) {
+int Win32Application::Run(DXSample *pSample, HINSTANCE hInstance, int nCmdShow) {
     // Parse the command line parameters
     int argc;
     LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
@@ -33,15 +32,12 @@ int Win32Application::Run(DXSample *pSample, HINSTANCE hInstance,
     windowClass.lpszClassName = L"DXSampleClass";
     RegisterClassEx(&windowClass);
 
-    RECT windowRect = {0, 0, static_cast<LONG>(pSample->GetWidth()),
-                       static_cast<LONG>(pSample->GetHeight())};
+    RECT windowRect = {0, 0, static_cast<LONG>(pSample->GetWidth()), static_cast<LONG>(pSample->GetHeight())};
     AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
     // Create the window and store a handle to it.
-    m_hwnd = CreateWindow(windowClass.lpszClassName, pSample->GetTitle(),
-                          WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-                          windowRect.right - windowRect.left,
-                          windowRect.bottom - windowRect.top,
+    m_hwnd = CreateWindow(windowClass.lpszClassName, pSample->GetTitle(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
+                          CW_USEDEFAULT, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
                           nullptr, // We have no parent window.
                           nullptr, // We aren't using menus.
                           hInstance, pSample);
@@ -69,18 +65,14 @@ int Win32Application::Run(DXSample *pSample, HINSTANCE hInstance,
 }
 
 // Main message handler for the sample.
-LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message,
-                                              WPARAM wParam, LPARAM lParam) {
-    DXSample *pSample =
-        reinterpret_cast<DXSample *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    DXSample *pSample = reinterpret_cast<DXSample *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
     switch (message) {
     case WM_CREATE: {
         // Save the DXSample* passed in to CreateWindow.
         LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
-        SetWindowLongPtr(
-            hWnd, GWLP_USERDATA,
-            reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
     }
         return 0;
 
