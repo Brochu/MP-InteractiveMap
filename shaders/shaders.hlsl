@@ -22,7 +22,7 @@ struct PSInput {
 PSInput VSMain(float4 position : POSITION, float4 color : COLOR) {
     PSInput result;
 
-    output.position = mul(mvp, position);
+    result.position = mul(mvp, position);
     result.color = color;
 
     return result;
