@@ -117,12 +117,25 @@ void MapViewer::LoadPipeline() {
     // Create frame resources.
     {
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+        CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+
+        // Depth targets creation settings
+        D3D12_HEAP_PROPERTIES depthProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+        D3D12_RESOURCE_DESC depthDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, m_width, m_height, 1, 0, 1,
+                                                                     0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+        D3D12_CLEAR_VALUE depthClear{DXGI_FORMAT_D32_FLOAT, {1.f, 0}};
 
         // Create a RTV and a command allocator for each frame.
         for (UINT n = 0; n < FrameCount; n++) {
             ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
             m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
             rtvHandle.Offset(1, m_rtvDescriptorSize);
+
+            ThrowIfFailed(m_device->CreateCommittedResource(&depthProps, D3D12_HEAP_FLAG_NONE, &depthDesc,
+                                                            D3D12_RESOURCE_STATE_DEPTH_WRITE, &depthClear,
+                                                            IID_PPV_ARGS(&m_depthTargets[n])));
+            m_device->CreateDepthStencilView(m_depthTargets[n].Get(), nullptr, dsvHandle);
+            dsvHandle.Offset(1, m_dsvDescriptorSize);
 
             ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
                                                            IID_PPV_ARGS(&m_commandAllocators[n])));
@@ -412,7 +425,9 @@ void MapViewer::PopulateCommandList() {
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex,
                                             m_rtvDescriptorSize);
-    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex,
+                                            m_dsvDescriptorSize);
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
     // Record commands.
     const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
