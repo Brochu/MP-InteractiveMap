@@ -330,7 +330,6 @@ void MapViewer::LoadAssets() {
 
 // Update frame-based values.
 void MapViewer::OnUpdate() {
-    //TODO: Debug this logic
     XMMATRIX model = XMMatrixIdentity();
     model = XMMatrixMultiply(model, m_rotation);
 
@@ -382,7 +381,10 @@ void MapViewer::OnDestroy() {
 
 void MapViewer::OnMouseMove(short x, short y) {}
 
-void MapViewer::OnMouseWheel(short z) {}
+void MapViewer::OnMouseWheel(short deltaz) {
+    static const short divisor = -60;
+    m_fov += (float)deltaz / divisor;
+}
 
 void MapViewer::PopulateCommandList() {
     // Command list allocators can only be reset when the associated
