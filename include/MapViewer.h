@@ -32,6 +32,7 @@ public:
     virtual void OnRender() override;
     virtual void OnDestroy() override;
 
+    virtual void OnKeyDown(UINT8 key) override;
     virtual void OnMouseMove(short x, short y) override;
     virtual void OnMouseWheel(short z) override;
 
@@ -91,6 +92,7 @@ private:
 
     UINT m_width = 0;
     UINT m_height = 0;
+    UINT m_mapIndex = 0;
 
     XMMATRIX m_rotation = XMMatrixIdentity();
     FXMVECTOR m_camera = {0.0, 150.0, -600.0, 1.0};

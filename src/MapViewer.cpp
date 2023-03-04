@@ -358,6 +358,12 @@ void MapViewer::OnDestroy() {
     CloseHandle(m_fenceEvent);
 }
 
+void MapViewer::OnKeyDown(UINT8 key) {
+    if (key >= '1' && key <= '7') {
+        m_mapIndex = key - '0';
+    }
+}
+
 void MapViewer::OnMouseMove(short x, short y) {}
 
 void MapViewer::OnMouseWheel(short deltaz) {
