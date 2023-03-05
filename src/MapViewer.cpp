@@ -388,7 +388,7 @@ void MapViewer::OnDestroy() {
 
 void MapViewer::OnKeyDown(UINT8 key) {
     if (key >= '1' && key <= '7') {
-        m_mapIndex = key - '0';
+        m_mapIndex = key - '0' - 1;
     }
 }
 
@@ -441,12 +441,21 @@ void MapViewer::PopulateCommandList() {
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     m_commandList->IASetIndexBuffer(&m_indexBufferView);
+
     // TODO: Need to figure out offsets for maps past the first one
-    m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[0], 1, 0, 0, 0);
+    UINT indexStart = 0;
+    UINT vertexStart = 0;
+    if (m_mapIndex > 0) {
+        indexStart = (UINT)m_indOffsets[m_mapIndex - 1];
+        vertexStart = (UINT)m_vertOffsets[m_mapIndex - 1];
+    }
+    m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[m_mapIndex] - indexStart, 1, indexStart, vertexStart, 0);
+    // TODO: Find a better way to package draw calls
+    //  Do we need to split each map in a draw call per room?
 
     m_commandList->SetPipelineState(m_wirePipelineState.Get());
     m_commandList->SetGraphicsRoot32BitConstant(1, 1, 0);
-    m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[0], 1, 0, 0, 0);
+    m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[m_mapIndex] - indexStart, 1, indexStart, vertexStart, 0);
     m_commandList->SetPipelineState(m_pipelineState.Get());
 
     // Indicate that the back buffer will now be used to present.
