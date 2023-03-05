@@ -247,6 +247,14 @@ void MapViewer::LoadAssets() {
                                                                            aiProcessPreset_TargetRealtime_MaxQuality |
                                                                            aiProcess_PreTransformVertices);
             aiMesh *mesh = scene->mMeshes[0]; // For the map models, we only have one mesh
+            if (scene->mRootNode != nullptr) {
+                printf("[SCENE] We have a valid root node\n");
+                aiNode *node = scene->mRootNode;
+
+                printf("[NODE] name = %s\n", node->mName.C_Str());
+                printf("[NODE] numMeshes = %i\n", node->mNumMeshes);
+                printf("[NODE] numChildren = %i\n", node->mNumChildren);
+            }
 
             for (UINT i = 0; i < mesh->mNumVertices; i++) {
                 aiVector3D vert = mesh->mVertices[i];
@@ -393,7 +401,7 @@ void MapViewer::OnKeyDown(UINT8 key) {
 }
 
 void MapViewer::OnMouseMove(short x, short y) {
-    printf("Is left mouse down -> %s; Is right mouse down -> %s\n", m_LDown ? "YES" : "NO", m_RDown ? "YES" : "NO");
+    //printf("Is left mouse down -> %s; Is right mouse down -> %s\n", m_LDown ? "YES" : "NO", m_RDown ? "YES" : "NO");
 }
 
 void MapViewer::OnMouseWheel(short deltaz) {
