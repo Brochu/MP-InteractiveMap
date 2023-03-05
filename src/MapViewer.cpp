@@ -62,7 +62,8 @@ void MapViewer::LoadPipeline() {
         ComPtr<IDXGIAdapter1> hardwareAdapter;
         GetHardwareAdapter(factory.Get(), &hardwareAdapter);
 
-        ThrowIfFailed(D3D12CreateDevice(hardwareAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)));
+        ThrowIfFailed(
+            D3D12CreateDevice(hardwareAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)));
     }
 
     // Describe and create the command queue.
@@ -83,10 +84,10 @@ void MapViewer::LoadPipeline() {
     swapChainDesc.SampleDesc.Count = 1;
 
     ComPtr<IDXGISwapChain1> swapChain;
-    ThrowIfFailed(factory->CreateSwapChainForHwnd(m_commandQueue.Get(), // Swap chain needs the queue so that it can
-                                                                        // force a flush on it.
-                                                  Win32Application::GetHwnd(), &swapChainDesc, nullptr, nullptr,
-                                                  &swapChain));
+    ThrowIfFailed(factory->CreateSwapChainForHwnd(m_commandQueue.Get(), // Swap chain needs the queue so that
+                                                                        // it can force a flush on it.
+                                                  Win32Application::GetHwnd(), &swapChainDesc, nullptr,
+                                                  nullptr, &swapChain));
 
     // This sample does not support fullscreen transitions.
     ThrowIfFailed(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
@@ -121,8 +122,8 @@ void MapViewer::LoadPipeline() {
 
         // Depth targets creation settings
         D3D12_HEAP_PROPERTIES depthProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-        D3D12_RESOURCE_DESC depthDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, m_width, m_height, 1, 0, 1,
-                                                                     0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+        D3D12_RESOURCE_DESC depthDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+            DXGI_FORMAT_D32_FLOAT, m_width, m_height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
         D3D12_CLEAR_VALUE depthClear{DXGI_FORMAT_D32_FLOAT, {1.f, 0}};
 
         // Create a RTV and a command allocator for each frame.
@@ -155,13 +156,14 @@ void MapViewer::LoadAssets() {
         CD3DX12_ROOT_PARAMETER1 params[]{constBufferParam, constParam};
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(2, params, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        rootSignatureDesc.Init_1_1(2, params, 0, nullptr,
+                                   D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
         ThrowIfFailed(D3D12SerializeVersionedRootSignature(&rootSignatureDesc, &signature, &error));
-        ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(),
-                                                    IID_PPV_ARGS(&m_rootSignature)));
+        ThrowIfFailed(m_device->CreateRootSignature(
+            0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
     }
 
     // Create Constant Buffer for per-frame data
@@ -194,14 +196,14 @@ void MapViewer::LoadAssets() {
         UINT compileFlags = 0;
 #endif
 
-        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/shaders.hlsl").c_str(), nullptr, nullptr, "VSMain",
-                                         "vs_5_1", compileFlags, 0, &vertexShader, nullptr));
-        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/shaders.hlsl").c_str(), nullptr, nullptr, "PSMain",
-                                         "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/shaders.hlsl").c_str(), nullptr, nullptr,
+                                         "VSMain", "vs_5_1", compileFlags, 0, &vertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/shaders.hlsl").c_str(), nullptr, nullptr,
+                                         "PSMain", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
 
         // Define the vertex input layout.
-        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
-            {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}};
+        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
+                                                         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}};
 
         // Describe and create the graphics pipeline state object (PSO).
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -243,9 +245,9 @@ void MapViewer::LoadAssets() {
             std::string filepath = std::format("data/{}.obj", world);
 
             Assimp::Importer importer;
-            const aiScene *scene = importer.ReadFile(filepath.c_str(), aiProcess_ConvertToLeftHanded |
-                                                                           aiProcessPreset_TargetRealtime_MaxQuality |
-                                                                           aiProcess_PreTransformVertices);
+            const aiScene *scene = importer.ReadFile(
+                filepath.c_str(), aiProcess_ConvertToLeftHanded | aiProcessPreset_TargetRealtime_MaxQuality |
+                                      aiProcess_PreTransformVertices);
             printf("[SCENE] numMeshes = %i\n", scene->mNumMeshes);
             aiMesh *mesh = scene->mMeshes[0]; // For the map models, we only have one mesh
             if (scene->mRootNode != nullptr) {
@@ -331,8 +333,8 @@ void MapViewer::LoadAssets() {
     // Create synchronization objects and wait until assets have been uploaded
     // to the GPU.
     {
-        ThrowIfFailed(
-            m_device->CreateFence(m_fenceValues[m_frameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+        ThrowIfFailed(m_device->CreateFence(m_fenceValues[m_frameIndex], D3D12_FENCE_FLAG_NONE,
+                                            IID_PPV_ARGS(&m_fence)));
         m_fenceValues[m_frameIndex]++;
 
         // Create an event handle to use for frame synchronization.
@@ -402,7 +404,8 @@ void MapViewer::OnKeyDown(UINT8 key) {
 }
 
 void MapViewer::OnMouseMove(short x, short y) {
-    //printf("Is left mouse down -> %s; Is right mouse down -> %s\n", m_LDown ? "YES" : "NO", m_RDown ? "YES" : "NO");
+    // printf("Is left mouse down -> %s; Is right mouse down -> %s\n", m_LDown ? "YES" : "NO", m_RDown ? "YES"
+    // : "NO");
 }
 
 void MapViewer::OnMouseWheel(short deltaz) {
@@ -434,7 +437,8 @@ void MapViewer::PopulateCommandList() {
 
     // Indicate that the back buffer will be used as a render target.
     D3D12_RESOURCE_BARRIER render_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT,
+        D3D12_RESOURCE_STATE_RENDER_TARGET);
     m_commandList->ResourceBarrier(1, &render_barrier);
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex,
@@ -458,18 +462,21 @@ void MapViewer::PopulateCommandList() {
         indexStart = (UINT)m_indOffsets[m_mapIndex - 1];
         vertexStart = (UINT)m_vertOffsets[m_mapIndex - 1];
     }
-    m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[m_mapIndex] - indexStart, 1, indexStart, vertexStart, 0);
+    m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[m_mapIndex] - indexStart, 1, indexStart,
+                                        vertexStart, 0);
     // TODO: Find a better way to package draw calls
     //  Do we need to split each map in a draw call per room?
 
     m_commandList->SetPipelineState(m_wirePipelineState.Get());
     m_commandList->SetGraphicsRoot32BitConstant(1, 1, 0);
-    m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[m_mapIndex] - indexStart, 1, indexStart, vertexStart, 0);
+    m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[m_mapIndex] - indexStart, 1, indexStart,
+                                        vertexStart, 0);
     m_commandList->SetPipelineState(m_pipelineState.Get());
 
     // Indicate that the back buffer will now be used to present.
     D3D12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+        m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PRESENT);
     m_commandList->ResourceBarrier(1, &present_barrier);
 
     ThrowIfFailed(m_commandList->Close());

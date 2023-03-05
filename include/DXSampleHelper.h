@@ -34,8 +34,8 @@ private:
     const HRESULT m_hr;
 };
 
-#define SAFE_RELEASE(p)                                                                                                \
-    if (p)                                                                                                             \
+#define SAFE_RELEASE(p)                                                                                      \
+    if (p)                                                                                                   \
     (p)->Release()
 
 inline void ThrowIfFailed(HRESULT hr) {
@@ -73,11 +73,13 @@ inline HRESULT ReadDataFromFile(LPCWSTR filename, byte **data, UINT *size) {
     extendedParams.lpSecurityAttributes = nullptr;
     extendedParams.hTemplateFile = nullptr;
 
-    Wrappers::FileHandle file(CreateFile2(filename, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, &extendedParams));
+    Wrappers::FileHandle file(
+        CreateFile2(filename, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, &extendedParams));
 #else
-    Wrappers::FileHandle file(CreateFile(
-        filename, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN | SECURITY_SQOS_PRESENT | SECURITY_ANONYMOUS, nullptr));
+    Wrappers::FileHandle file(CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+                                         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN |
+                                             SECURITY_SQOS_PRESENT | SECURITY_ANONYMOUS,
+                                         nullptr));
 #endif
     if (file.Get() == INVALID_HANDLE_VALUE) {
         throw std::exception();
@@ -181,8 +183,10 @@ inline UINT CalculateConstantBufferByteSize(UINT byteSize) {
 }
 
 #ifdef D3D_COMPILE_STANDARD_FILE_INCLUDE
-inline Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(const std::wstring &filename, const D3D_SHADER_MACRO *defines,
-                                                      const std::string &entrypoint, const std::string &target) {
+inline Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(const std::wstring &filename,
+                                                      const D3D_SHADER_MACRO *defines,
+                                                      const std::string &entrypoint,
+                                                      const std::string &target) {
     UINT compileFlags = 0;
 #if defined(_DEBUG) || defined(DBG)
     compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;

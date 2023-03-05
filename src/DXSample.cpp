@@ -58,14 +58,16 @@ _Use_decl_annotations_ void DXSample::GetHardwareAdapter(IDXGIFactory1 *pFactory
 
             // Check to see whether the adapter supports Direct3D 12, but don't
             // create the actual device yet.
-            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr))) {
+            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device),
+                                            nullptr))) {
                 break;
             }
         }
     }
 
     if (adapter.Get() == nullptr) {
-        for (UINT adapterIndex = 0; SUCCEEDED(pFactory->EnumAdapters1(adapterIndex, &adapter)); ++adapterIndex) {
+        for (UINT adapterIndex = 0; SUCCEEDED(pFactory->EnumAdapters1(adapterIndex, &adapter));
+             ++adapterIndex) {
             DXGI_ADAPTER_DESC1 desc;
             adapter->GetDesc1(&desc);
 
@@ -78,7 +80,8 @@ _Use_decl_annotations_ void DXSample::GetHardwareAdapter(IDXGIFactory1 *pFactory
 
             // Check to see whether the adapter supports Direct3D 12, but don't
             // create the actual device yet.
-            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr))) {
+            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device),
+                                            nullptr))) {
                 break;
             }
         }
@@ -96,7 +99,8 @@ void DXSample::SetCustomWindowText(LPCWSTR text) {
 // Helper function for parsing any supplied command line args.
 _Use_decl_annotations_ void DXSample::ParseCommandLineArgs(WCHAR *argv[], int argc) {
     for (int i = 1; i < argc; ++i) {
-        if (_wcsnicmp(argv[i], L"-warp", wcslen(argv[i])) == 0 || _wcsnicmp(argv[i], L"/warp", wcslen(argv[i])) == 0) {
+        if (_wcsnicmp(argv[i], L"-warp", wcslen(argv[i])) == 0 ||
+            _wcsnicmp(argv[i], L"/warp", wcslen(argv[i])) == 0) {
             m_useWarpDevice = true;
             m_title = m_title + L" (WARP)";
         }
