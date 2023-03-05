@@ -102,7 +102,10 @@ private:
     bool m_LDown = false;
     bool m_RDown = false;
 
-    XMMATRIX m_rotation = XMMatrixIdentity();
+    UINT m_mx = 0;
+    UINT m_my = 0;
+    int m_ymap = 0;
+    int m_xmap = 0;
     FXMVECTOR m_camera = {0.0, 150.0, -600.0, 1.0};
     FXMVECTOR m_lookat = {0.0, 0.0, 0.0, 1.0};
     FXMVECTOR m_updir = {0.0, 1.0, 0.0, 0.0};

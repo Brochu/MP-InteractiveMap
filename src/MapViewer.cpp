@@ -353,7 +353,8 @@ void MapViewer::LoadAssets() {
 // Update frame-based values.
 void MapViewer::OnUpdate() {
     XMMATRIX model = XMMatrixIdentity();
-    model = XMMatrixMultiply(model, m_rotation);
+    model = XMMatrixMultiply(model, XMMatrixRotationY(XMConvertToRadians((float)m_ymap)));
+    model = XMMatrixMultiply(model, XMMatrixRotationX(XMConvertToRadians((float)m_xmap)));
 
     XMMATRIX view = XMMatrixLookAtLH(m_camera, m_lookat, m_updir);
 
@@ -404,8 +405,27 @@ void MapViewer::OnKeyDown(UINT8 key) {
 }
 
 void MapViewer::OnMouseMove(short x, short y) {
-    // printf("Is left mouse down -> %s; Is right mouse down -> %s\n", m_LDown ? "YES" : "NO", m_RDown ? "YES"
-    // : "NO");
+    if (m_LDown) {
+
+        // TODO: Look into a way to avoid gimble locks for rotations, using quats?
+        m_ymap += (m_mx - x);
+        if (m_ymap > 360)
+            m_ymap -= 360;
+        if (m_ymap < -360)
+            m_ymap += 360;
+
+        m_xmap += (m_my - y);
+        if (m_xmap > 360)
+            m_xmap -= 360;
+        if (m_xmap < -360)
+            m_xmap += 360;
+
+        printf("(%i, %i)\n", m_mx - x, m_ymap);
+        printf("(%i, %i)\n", m_my - y, m_xmap);
+    }
+
+    m_mx = x;
+    m_my = y;
 }
 
 void MapViewer::OnMouseWheel(short deltaz) {
