@@ -246,6 +246,7 @@ void MapViewer::LoadAssets() {
             const aiScene *scene = importer.ReadFile(filepath.c_str(), aiProcess_ConvertToLeftHanded |
                                                                            aiProcessPreset_TargetRealtime_MaxQuality |
                                                                            aiProcess_PreTransformVertices);
+            printf("[SCENE] numMeshes = %i\n", scene->mNumMeshes);
             aiMesh *mesh = scene->mMeshes[0]; // For the map models, we only have one mesh
             if (scene->mRootNode != nullptr) {
                 printf("[SCENE] We have a valid root node\n");
