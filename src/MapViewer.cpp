@@ -355,6 +355,7 @@ void MapViewer::OnUpdate() {
     XMMATRIX model = XMMatrixIdentity();
     model = XMMatrixMultiply(model, XMMatrixRotationY(XMConvertToRadians((float)m_ymap)));
     model = XMMatrixMultiply(model, XMMatrixRotationX(XMConvertToRadians((float)m_xmap)));
+    model = XMMatrixMultiply(model, XMMatrixTranslation((float)m_xt, (float)m_yt, 0.f));
 
     XMMATRIX view = XMMatrixLookAtLH(m_camera, m_lookat, m_updir);
 
@@ -406,7 +407,7 @@ void MapViewer::OnKeyDown(UINT8 key) {
 
 void MapViewer::OnMouseMove(short x, short y) {
     if (m_LDown) {
-
+        // TODO: Better way to handle this would be to rotate the camera around the look at pos
         // TODO: Look into a way to avoid gimble locks for rotations, using quats?
         m_ymap += (m_mx - x);
         if (m_ymap > 360)
@@ -419,9 +420,12 @@ void MapViewer::OnMouseMove(short x, short y) {
             m_xmap -= 360;
         if (m_xmap < -360)
             m_xmap += 360;
+    }
 
-        printf("(%i, %i)\n", m_mx - x, m_ymap);
-        printf("(%i, %i)\n", m_my - y, m_xmap);
+    if (m_RDown) {
+        m_xt -= (m_mx - x);
+        m_yt += (m_my - y);
+        // TODO: Add z translation with CTRL held down?
     }
 
     m_mx = x;
