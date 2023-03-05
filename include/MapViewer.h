@@ -35,6 +35,8 @@ public:
     virtual void OnKeyDown(UINT8 key) override;
     virtual void OnMouseMove(short x, short y) override;
     virtual void OnMouseWheel(short z) override;
+    virtual void OnMouseLButton(bool state) override;
+    virtual void OnMouseRButton(bool state) override;
 
 private:
     // In this sample we overload the meaning of FrameCount to mean both the
@@ -97,6 +99,8 @@ private:
     UINT m_width = 0;
     UINT m_height = 0;
     UINT m_mapIndex = 0;
+    bool m_LDown = false;
+    bool m_RDown = false;
 
     XMMATRIX m_rotation = XMMatrixIdentity();
     FXMVECTOR m_camera = {0.0, 150.0, -600.0, 1.0};

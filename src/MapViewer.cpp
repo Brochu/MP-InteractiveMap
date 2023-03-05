@@ -392,12 +392,18 @@ void MapViewer::OnKeyDown(UINT8 key) {
     }
 }
 
-void MapViewer::OnMouseMove(short x, short y) {}
+void MapViewer::OnMouseMove(short x, short y) {
+    printf("Is left mouse down -> %s; Is right mouse down -> %s\n", m_LDown ? "YES" : "NO", m_RDown ? "YES" : "NO");
+}
 
 void MapViewer::OnMouseWheel(short deltaz) {
     static const short divisor = -60;
     m_fov += (float)deltaz / divisor;
 }
+
+void MapViewer::OnMouseLButton(bool state) { m_LDown = state; }
+
+void MapViewer::OnMouseRButton(bool state) { m_RDown = state; }
 
 void MapViewer::PopulateCommandList() {
     // Command list allocators can only be reset when the associated
