@@ -355,7 +355,7 @@ void MapViewer::OnUpdate() {
     XMMATRIX model = XMMatrixIdentity();
     model = XMMatrixMultiply(model, XMMatrixRotationY(XMConvertToRadians((float)m_ymap)));
     model = XMMatrixMultiply(model, XMMatrixRotationX(XMConvertToRadians((float)m_xmap)));
-    model = XMMatrixMultiply(model, XMMatrixTranslation((float)m_xt, (float)m_yt, 0.f));
+    model = XMMatrixMultiply(model, XMMatrixTranslation((float)m_xt, (float)m_yt, (float)m_zt));
 
     XMMATRIX view = XMMatrixLookAtLH(m_camera, m_lookat, m_updir);
 
@@ -405,8 +405,8 @@ void MapViewer::OnKeyDown(UINT8 key) {
     }
 }
 
-void MapViewer::OnMouseMove(short x, short y) {
-    if (m_LDown) {
+void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool ctrl) {
+    if (LButton) {
         // TODO: Better way to handle this would be to rotate the camera around the look at pos
         // TODO: Look into a way to avoid gimble locks for rotations, using quats?
         m_ymap += (m_mx - x);
@@ -422,10 +422,11 @@ void MapViewer::OnMouseMove(short x, short y) {
             m_xmap += 360;
     }
 
-    if (m_RDown) {
+    if (RButton && !ctrl) {
         m_xt -= (m_mx - x);
         m_yt += (m_my - y);
-        // TODO: Add z translation with CTRL held down?
+    } else if (RButton) {
+        m_zt -= (m_my - y);
     }
 
     m_mx = x;
@@ -436,10 +437,6 @@ void MapViewer::OnMouseWheel(short deltaz) {
     static const short divisor = -60;
     m_fov += (float)deltaz / divisor;
 }
-
-void MapViewer::OnMouseLButton(bool state) { m_LDown = state; }
-
-void MapViewer::OnMouseRButton(bool state) { m_RDown = state; }
 
 void MapViewer::PopulateCommandList() {
     // Command list allocators can only be reset when the associated

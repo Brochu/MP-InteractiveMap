@@ -92,37 +92,14 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
     case WM_MOUSEMOVE:
         if (pSample) {
             auto pt = MAKEPOINTS(lParam);
-            pSample->OnMouseMove(pt.x, pt.y);
+            pSample->OnMouseMove(pt.x, pt.y, (wParam & MK_LBUTTON) == MK_LBUTTON,
+                                 (wParam & MK_RBUTTON) == MK_RBUTTON, (wParam & MK_CONTROL) == MK_CONTROL);
         }
         return 0;
 
     case WM_MOUSEWHEEL:
         if (pSample) {
             pSample->OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam));
-        }
-        return 0;
-
-    case WM_LBUTTONDOWN:
-        if (pSample) {
-            pSample->OnMouseLButton(true);
-        }
-        return 0;
-
-    case WM_LBUTTONUP:
-        if (pSample) {
-            pSample->OnMouseLButton(false);
-        }
-        return 0;
-
-    case WM_RBUTTONDOWN:
-        if (pSample) {
-            pSample->OnMouseRButton(true);
-        }
-        return 0;
-
-    case WM_RBUTTONUP:
-        if (pSample) {
-            pSample->OnMouseRButton(false);
         }
         return 0;
 

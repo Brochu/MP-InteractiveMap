@@ -33,10 +33,8 @@ public:
     virtual void OnDestroy() override;
 
     virtual void OnKeyDown(UINT8 key) override;
-    virtual void OnMouseMove(short x, short y) override;
+    virtual void OnMouseMove(short x, short y, bool LButton, bool RButton, bool ctrl) override;
     virtual void OnMouseWheel(short z) override;
-    virtual void OnMouseLButton(bool state) override;
-    virtual void OnMouseRButton(bool state) override;
 
 private:
     // In this sample we overload the meaning of FrameCount to mean both the
@@ -101,13 +99,12 @@ private:
     UINT m_mapIndex = 0;
     UINT m_mx = 0;
     UINT m_my = 0;
-    bool m_LDown = false;
-    bool m_RDown = false;
 
     int m_ymap = 0;
     int m_xmap = 0;
     int m_xt = 0;
     int m_yt = 0;
+    int m_zt = 0;
     FXMVECTOR m_camera = {0.0, 150.0, -600.0, 1.0};
     FXMVECTOR m_lookat = {0.0, 0.0, 0.0, 1.0};
     FXMVECTOR m_updir = {0.0, 1.0, 0.0, 0.0};
