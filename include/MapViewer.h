@@ -105,9 +105,9 @@ private:
     int m_xt = 0;
     int m_yt = 0;
     int m_zt = 0;
-    FXMVECTOR m_camera = {0.0, 150.0, -600.0, 1.0};
-    FXMVECTOR m_lookto = {0.0, -150.0, 600.0, 1.0};
-    FXMVECTOR m_updir = {0.0, 1.0, 0.0, 0.0};
+    XMVECTOR m_camera = {0.0, 0.0, -600.0, 1.0};
+    XMVECTOR m_lookat = {0.0, 0.0, 0.0, 1.0};
+    XMVECTOR m_updir = {0.0, 1.0, 0.0, 0.0};
     float m_fov = 45.0;
 
     std::vector<size_t> m_vertOffsets;

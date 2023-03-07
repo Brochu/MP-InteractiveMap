@@ -358,9 +358,13 @@ void MapViewer::LoadAssets() {
 // Update frame-based values.
 void MapViewer::OnUpdate() {
     XMMATRIX model = XMMatrixIdentity();
-    model = XMMatrixMultiply(model, XMMatrixRotationY(XMConvertToRadians((float)m_ymap)));
-    model = XMMatrixMultiply(model, XMMatrixRotationX(XMConvertToRadians((float)m_xmap)));
-    model = XMMatrixMultiply(model, XMMatrixTranslation((float)m_xt, (float)m_yt, (float)m_zt));
+    // model = XMMatrixMultiply(model, XMMatrixRotationY(XMConvertToRadians((float)m_ymap)));
+    // model = XMMatrixMultiply(model, XMMatrixRotationX(XMConvertToRadians((float)m_xmap)));
+    // model = XMMatrixMultiply(model, XMMatrixTranslation((float)m_xt, (float)m_yt, (float)m_zt));
+
+    XMVECTOR campos = XMVector4Transform(m_camera, XMMatrixRotationX(XMConvertToRadians((float)-m_xmap)));
+    campos = XMVector4Transform(campos, XMMatrixRotationY(XMConvertToRadians((float)-m_ymap)));
+
     // We can use this to transform camera position
     // XMVector4Transform(XMVECTOR, XMMATRIX);
     // TEST
@@ -376,7 +380,7 @@ void MapViewer::OnUpdate() {
     // printf("[UPDATE][After] %f, %f, %f, %f\n", stored.x, stored.y, stored.z, stored.w);
     //  -----------------------------
 
-    XMMATRIX view = XMMatrixLookToLH(m_camera, m_lookto, m_updir);
+    XMMATRIX view = XMMatrixLookAtLH(campos, m_lookat, m_updir);
 
     float aspect = (float)m_width / m_height;
     XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov), aspect, 0.1f, 100000.0f);
@@ -435,10 +439,10 @@ void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool c
             m_ymap += 360;
 
         m_xmap += (m_my - y);
-        if (m_xmap > 360)
-            m_xmap -= 360;
-        if (m_xmap < -360)
-            m_xmap += 360;
+        if (m_xmap > 89)
+            m_xmap = 89;
+        if (m_xmap < -89)
+            m_xmap = -89;
     }
 
     if (RButton && !ctrl) {
