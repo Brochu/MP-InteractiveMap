@@ -356,8 +356,10 @@ void MapViewer::OnUpdate() {
     model = XMMatrixMultiply(model, XMMatrixRotationY(XMConvertToRadians((float)m_ymap)));
     model = XMMatrixMultiply(model, XMMatrixRotationX(XMConvertToRadians((float)m_xmap)));
     model = XMMatrixMultiply(model, XMMatrixTranslation((float)m_xt, (float)m_yt, (float)m_zt));
+    // We can use this to transform camera position
+    // XMVector4Transform(XMVECTOR, XMMATRIX);
 
-    XMMATRIX view = XMMatrixLookAtLH(m_camera, m_lookat, m_updir);
+    XMMATRIX view = XMMatrixLookToLH(m_camera, m_lookto, m_updir);
 
     float aspect = (float)m_width / m_height;
     XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov), aspect, 0.1f, 100000.0f);
