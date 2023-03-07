@@ -201,9 +201,13 @@ void MapViewer::LoadAssets() {
         ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/shaders.hlsl").c_str(), nullptr, nullptr,
                                          "PSMain", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
 
-        // Define the vertex input layout.
-        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
-                                                         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}};
+        //  Define the vertex input layout.
+        D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
+            {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+             0},
+            {"NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+             0},
+        };
 
         // Describe and create the graphics pipeline state object (PSO).
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -261,7 +265,8 @@ void MapViewer::LoadAssets() {
 
             for (UINT i = 0; i < mesh->mNumVertices; i++) {
                 aiVector3D vert = mesh->mVertices[i];
-                vertices.emplace_back(vert.x, vert.y, vert.z);
+                aiVector3D norm = mesh->mNormals[i];
+                vertices.push_back({{vert.x, vert.y, vert.z, 1.f}, {norm.x, norm.y, norm.z, 0.f}});
             }
             for (UINT i = 0; i < mesh->mNumFaces; i++) {
                 for (UINT j = 0; j < mesh->mFaces[i].mNumIndices; j++) {

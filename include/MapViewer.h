@@ -48,13 +48,13 @@ private:
     static const UINT FrameCount = 2;
 
     struct Vertex {
-        Vertex(float x, float y, float z) {
-            position.x = x;
-            position.y = y;
-            position.z = z;
+        Vertex(XMFLOAT4 p, XMFLOAT4 n) {
+            position = p;
+            normal = n;
         }
 
-        XMFLOAT3 position;
+        XMFLOAT4 position;
+        XMFLOAT4 normal;
     };
 
     struct ConstantBuffer {

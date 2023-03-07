@@ -18,12 +18,14 @@ cbuffer PerDraw : register(b1) { uint val; }
 
 struct PSInput {
     float4 position : SV_POSITION;
+    float4 normal : NORMAL;
 };
 
-PSInput VSMain(float4 position : POSITION) {
+PSInput VSMain(float4 position : POSITION, float4 normal : NORMAL) {
     PSInput result;
 
     result.position = mul(mvp, position);
+    result.normal = normal;
 
     return result;
 }
@@ -32,5 +34,6 @@ float4 PSMain(PSInput input) : SV_TARGET {
     if (val > 0) {
         return float4(0.71, 0.43, 0.30, 1.0);
     }
-    return float4(0.41, 0.13, 0.0, 0.5);
+    return float4(input.normal.xyz, 1.0);
+    // return float4(0.41, 0.13, 0.0, 0.5);
 }
