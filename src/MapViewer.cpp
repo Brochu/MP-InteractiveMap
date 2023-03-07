@@ -357,29 +357,13 @@ void MapViewer::LoadAssets() {
 
 // Update frame-based values.
 void MapViewer::OnUpdate() {
-    XMMATRIX model = XMMatrixIdentity();
-    // model = XMMatrixMultiply(model, XMMatrixRotationY(XMConvertToRadians((float)m_ymap)));
-    // model = XMMatrixMultiply(model, XMMatrixRotationX(XMConvertToRadians((float)m_xmap)));
-    // model = XMMatrixMultiply(model, XMMatrixTranslation((float)m_xt, (float)m_yt, (float)m_zt));
+    XMVECTOR translate = {(float)m_xt, (float)m_yt, (float)m_zt, 0.f};
+    XMMATRIX translateMat = XMMatrixTranslationFromVector(translate);
+    XMMATRIX rotationMat = XMMatrixRotationRollPitchYaw(XMConvertToRadians((float)-m_xmap),
+                                                        XMConvertToRadians((float)-m_ymap), 0.f);
 
-    XMVECTOR campos = XMVector4Transform(m_camera, XMMatrixRotationX(XMConvertToRadians((float)-m_xmap)));
-    campos = XMVector4Transform(campos, XMMatrixRotationY(XMConvertToRadians((float)-m_ymap)));
-
-    // We can use this to transform camera position
-    // XMVector4Transform(XMVECTOR, XMMATRIX);
-    // TEST
-    // XMFLOAT4 stored;
-    // XMStoreFloat4(&stored, m_camera);
-
-    // printf("[UPDATE][Before] %f, %f, %f, %f\n", stored.x, stored.y, stored.z, stored.w);
-    // printf("[UPDATE][Translation] %i, %i, %i\n", m_xt, m_yt, m_zt);
-    // XMVECTOR test = XMVector4Transform(m_camera, XMMatrixTranslation((float)m_xt, (float)m_yt,
-    // (float)m_zt));
-
-    // XMStoreFloat4(&stored, test);
-    // printf("[UPDATE][After] %f, %f, %f, %f\n", stored.x, stored.y, stored.z, stored.w);
-    //  -----------------------------
-
+    XMMATRIX model = XMMatrixMultiply(XMMatrixIdentity(), translateMat);
+    XMVECTOR campos = XMVector4Transform(m_camera, rotationMat);
     XMMATRIX view = XMMatrixLookAtLH(campos, m_lookat, m_updir);
 
     float aspect = (float)m_width / m_height;
