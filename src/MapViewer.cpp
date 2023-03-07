@@ -132,6 +132,12 @@ void MapViewer::LoadPipeline() {
             m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
             rtvHandle.Offset(1, m_rtvDescriptorSize);
 
+            // TODO: Need to create an extra render target per active frames
+            // We store the main render pass in the intermediate RT
+            // Then we render the full screen effect with edge detection after
+            // full screen effect is an empty draw with 3 verts
+            // we then use SV_VertexID to create UVs and positions for a full screen tri
+
             ThrowIfFailed(m_device->CreateCommittedResource(&depthProps, D3D12_HEAP_FLAG_NONE, &depthDesc,
                                                             D3D12_RESOURCE_STATE_DEPTH_WRITE, &depthClear,
                                                             IID_PPV_ARGS(&m_depthTargets[n])));
@@ -371,7 +377,7 @@ void MapViewer::OnUpdate() {
 
     XMMATRIX mvp = XMMatrixMultiply(model, view);
     mvp = XMMatrixMultiply(mvp, projection);
-    XMMATRIX world = XMMatrixTranspose(model); // Need to convert local space to world space
+    XMMATRIX world = XMMatrixTranspose(model);
 
     ConstantBuffer cb{mvp, world};
 
@@ -414,7 +420,6 @@ void MapViewer::OnKeyDown(UINT8 key) {
 
 void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool ctrl) {
     if (LButton) {
-        // TODO: Better way to handle this would be to rotate the camera around the look at pos
         // TODO: Look into a way to avoid gimble locks for rotations, using quats?
         m_ymap += (m_mx - x);
         if (m_ymap > 360)
@@ -483,7 +488,6 @@ void MapViewer::PopulateCommandList() {
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     m_commandList->IASetIndexBuffer(&m_indexBufferView);
 
-    // TODO: Need to figure out offsets for maps past the first one
     UINT indexStart = 0;
     UINT vertexStart = 0;
     if (m_mapIndex > 0) {
@@ -495,6 +499,8 @@ void MapViewer::PopulateCommandList() {
     // TODO: Find a better way to package draw calls
     //  Do we need to split each map in a draw call per room?
 
+    // TODO: Implement the wireframe render with a full screen effect
+    // Need to look into a edge detection algorithm
     m_commandList->SetPipelineState(m_wirePipelineState.Get());
     m_commandList->SetGraphicsRoot32BitConstant(1, 1, 0);
     m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[m_mapIndex] - indexStart, 1, indexStart,
