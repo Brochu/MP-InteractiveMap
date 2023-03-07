@@ -358,6 +358,18 @@ void MapViewer::OnUpdate() {
     model = XMMatrixMultiply(model, XMMatrixTranslation((float)m_xt, (float)m_yt, (float)m_zt));
     // We can use this to transform camera position
     // XMVector4Transform(XMVECTOR, XMMATRIX);
+    // TEST
+    // XMFLOAT4 stored;
+    // XMStoreFloat4(&stored, m_camera);
+
+    // printf("[UPDATE][Before] %f, %f, %f, %f\n", stored.x, stored.y, stored.z, stored.w);
+    // printf("[UPDATE][Translation] %i, %i, %i\n", m_xt, m_yt, m_zt);
+    // XMVECTOR test = XMVector4Transform(m_camera, XMMatrixTranslation((float)m_xt, (float)m_yt,
+    // (float)m_zt));
+
+    // XMStoreFloat4(&stored, test);
+    // printf("[UPDATE][After] %f, %f, %f, %f\n", stored.x, stored.y, stored.z, stored.w);
+    //  -----------------------------
 
     XMMATRIX view = XMMatrixLookToLH(m_camera, m_lookto, m_updir);
 
