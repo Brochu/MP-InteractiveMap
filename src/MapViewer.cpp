@@ -278,60 +278,68 @@ void MapViewer::LoadAssets() {
 
     // Create the vertex buffer.
     {
-        const UINT vertexBufferSize = sizeof(Vertex) * (UINT)vertices.size();
-        const UINT indexBufferSize = sizeof(unsigned int) * (UINT)indices.size();
-
         // Note: using upload heaps to transfer static data like vert buffers is
         // not recommended. Every time the GPU needs it, the upload heap will be
         // marshalled over. Please read up on Default Heap usage. An upload heap
         // is used here for code simplicity and because there are very few verts
         // to actually transfer.
-        // TODO: Copy the vertex data over to default heap later
+
+        CD3DX12_RANGE readRange(0, 0); // We do not intend to read from these resources on the CPU.
+
+        const UINT vertexBufferSize = sizeof(Vertex) * (UINT)vertices.size();
+        const UINT indexBufferSize = sizeof(unsigned int) * (UINT)indices.size();
+
         D3D12_HEAP_PROPERTIES uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-        D3D12_RESOURCE_DESC vBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+        D3D12_RESOURCE_DESC uploadBufferDesc =
+            CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize + indexBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE,
+                                                        &uploadBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+                                                        nullptr, IID_PPV_ARGS(&m_uploadBuffer)));
 
-        ThrowIfFailed(m_device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &vBufferDesc,
-                                                        D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-                                                        IID_PPV_ARGS(&m_vertexBuffer)));
+        D3D12_HEAP_PROPERTIES defaultHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+        D3D12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(&defaultHeapProps, D3D12_HEAP_FLAG_NONE,
+                                                        &vertexBufferDesc, D3D12_RESOURCE_STATE_COPY_DEST,
+                                                        nullptr, IID_PPV_ARGS(&m_vertexBuffer)));
 
-        D3D12_RESOURCE_DESC iBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
-
-        ThrowIfFailed(m_device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &iBufferDesc,
-                                                        D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-                                                        IID_PPV_ARGS(&m_indexBuffer)));
-        // TODO: Copy vertex data to default vram heap
-        // TODO: Also prepare, upload and copy indices data to default vram for
-        // loaded models
-        // TODO: Load all different map regions, only render a selected one from
-        // the group
-
-        // Copy the triangle data to the vertex buffer.
-        UINT8 *pVertexDataBegin;
-        CD3DX12_RANGE readRange(0, 0); // We do not intend to read from this resource on the CPU.
-        ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void **>(&pVertexDataBegin)));
-        memcpy(pVertexDataBegin, vertices.data(), vertexBufferSize);
-        m_vertexBuffer->Unmap(0, nullptr);
-
-        // Initialize the vertex buffer view.
         m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
         m_vertexBufferView.StrideInBytes = sizeof(Vertex);
         m_vertexBufferView.SizeInBytes = vertexBufferSize;
 
-        UINT8 *pIndexDataBegin;
-        ThrowIfFailed(m_indexBuffer->Map(0, &readRange, reinterpret_cast<void **>(&pIndexDataBegin)));
-        memcpy(pIndexDataBegin, indices.data(), indexBufferSize);
-        m_indexBuffer->Unmap(0, nullptr);
+        D3D12_RESOURCE_DESC indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
+        ThrowIfFailed(m_device->CreateCommittedResource(&defaultHeapProps, D3D12_HEAP_FLAG_NONE,
+                                                        &indexBufferDesc, D3D12_RESOURCE_STATE_COPY_DEST,
+                                                        nullptr, IID_PPV_ARGS(&m_indexBuffer)));
 
         m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
         m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
         m_indexBufferView.SizeInBytes = indexBufferSize;
+
+        void *pUpload;
+        ThrowIfFailed(m_uploadBuffer->Map(0, &readRange, &pUpload));
+        memcpy(pUpload, vertices.data(), vertexBufferSize);
+        memcpy(static_cast<unsigned char *>(pUpload) + vertexBufferSize, indices.data(), indexBufferSize);
+        m_uploadBuffer->Unmap(0, nullptr);
+
+        m_commandList->CopyBufferRegion(m_vertexBuffer.Get(), 0, m_uploadBuffer.Get(), 0, vertexBufferSize);
+        m_commandList->CopyBufferRegion(m_indexBuffer.Get(), 0, m_uploadBuffer.Get(), vertexBufferSize,
+                                        indexBufferSize);
+
+        // Barriers, batch them together
+        const CD3DX12_RESOURCE_BARRIER barriers[2] = {
+            CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
+                                                 D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER),
+            CD3DX12_RESOURCE_BARRIER::Transition(m_indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
+                                                 D3D12_RESOURCE_STATE_INDEX_BUFFER)};
+
+        m_commandList->ResourceBarrier(2, barriers);
     }
 
     // Command lists are created in the recording state, but there is nothing
     // to record yet. The main loop expects it to be closed, so close it now.
     ThrowIfFailed(m_commandList->Close());
-
-    // TODO: Execute command list to start upload process
+    ID3D12CommandList *commandLists[] = {m_commandList.Get()};
+    m_commandQueue->ExecuteCommandLists(1, commandLists);
 
     // Create synchronization objects and wait until assets have been uploaded
     // to the GPU.

@@ -81,6 +81,7 @@ private:
     UINT m_dsvDescriptorSize;
 
     // App resources.
+    ComPtr<ID3D12Resource> m_uploadBuffer;
     ComPtr<ID3D12Resource> m_vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     ComPtr<ID3D12Resource> m_indexBuffer;
