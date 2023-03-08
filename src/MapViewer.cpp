@@ -99,7 +99,7 @@ void MapViewer::LoadPipeline() {
     {
         // Describe and create a render target view (RTV) descriptor heap.
         D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-        rtvHeapDesc.NumDescriptors = FrameCount;
+        rtvHeapDesc.NumDescriptors = FrameCount * 2;
         rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
@@ -113,34 +113,53 @@ void MapViewer::LoadPipeline() {
         ThrowIfFailed(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap)));
 
         m_dsvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+        D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
+        dsvHeapDesc.NumDescriptors = FrameCount;
+        dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
+
+        m_srvDescriptorSize =
+            m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     }
 
     // Create frame resources.
     {
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+        CD3DX12_CPU_DESCRIPTOR_HANDLE interRtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+        interRtvHandle.Offset(FrameCount, m_rtvDescriptorSize);
         CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
 
+        D3D12_HEAP_PROPERTIES defaultHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
         // Depth targets creation settings
-        D3D12_HEAP_PROPERTIES depthProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
         D3D12_RESOURCE_DESC depthDesc = CD3DX12_RESOURCE_DESC::Tex2D(
             DXGI_FORMAT_D32_FLOAT, m_width, m_height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
         D3D12_CLEAR_VALUE depthClear{DXGI_FORMAT_D32_FLOAT, {1.f, 0}};
 
         // Create a RTV and a command allocator for each frame.
         for (UINT n = 0; n < FrameCount; n++) {
+            // Main render targets, post process will render to those
             ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
             m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
             rtvHandle.Offset(1, m_rtvDescriptorSize);
 
-            // TODO: Need to create an extra render target per active frames
-            // We store the main render pass in the intermediate RT
-            // Then we render the full screen effect with edge detection after
-            // full screen effect is an empty draw with 3 verts
-            // we then use SV_VertexID to create UVs and positions for a full screen tri
+            // Intermediate render targets, the main render pass will go there
+            // Post process step takes this as input SRV
+            D3D12_RESOURCE_DESC interRTDesc = m_renderTargets[n]->GetDesc();
+            D3D12_CLEAR_VALUE interRTClear{interRTDesc.Format, {0.f, 0.f, 0.f, 1.f}};
+            ThrowIfFailed(m_device->CreateCommittedResource(&defaultHeapProps, D3D12_HEAP_FLAG_NONE,
+                                                            &interRTDesc, D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                                            &interRTClear, IID_PPV_ARGS(&m_interRTs[n])));
+            m_device->CreateRenderTargetView(m_interRTs[n].Get(), nullptr, interRtvHandle);
+            interRtvHandle.Offset(1, m_rtvDescriptorSize);
+            // TODO: Create a SRV heap to bind intermediate as resources for post process and create SRVs
 
-            ThrowIfFailed(m_device->CreateCommittedResource(&depthProps, D3D12_HEAP_FLAG_NONE, &depthDesc,
-                                                            D3D12_RESOURCE_STATE_DEPTH_WRITE, &depthClear,
-                                                            IID_PPV_ARGS(&m_depthTargets[n])));
+            // Depth stencil targets
+            ThrowIfFailed(m_device->CreateCommittedResource(&defaultHeapProps, D3D12_HEAP_FLAG_NONE,
+                                                            &depthDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE,
+                                                            &depthClear, IID_PPV_ARGS(&m_depthTargets[n])));
             m_device->CreateDepthStencilView(m_depthTargets[n].Get(), nullptr, dsvHandle);
             dsvHandle.Offset(1, m_dsvDescriptorSize);
 
@@ -368,7 +387,7 @@ void MapViewer::OnUpdate() {
 
     XMVECTOR camera = XMVector4Transform(m_camera, rotation);
     XMVECTOR lookat = XMVector4Transform(m_lookat, rotation);
-    XMVECTOR translate{ -(float)m_xt, -(float)m_yt, (float)m_zt, 0.f };
+    XMVECTOR translate{-(float)m_xt, -(float)m_yt, (float)m_zt, 0.f};
     camera += translate;
     lookat += translate;
     XMMATRIX view = XMMatrixLookAtLH(camera, lookat, m_updir);
