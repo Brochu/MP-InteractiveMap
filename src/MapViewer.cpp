@@ -115,9 +115,9 @@ void MapViewer::LoadPipeline() {
         m_dsvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
         D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
-        dsvHeapDesc.NumDescriptors = FrameCount;
-        dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        srvHeapDesc.NumDescriptors = FrameCount;
+        srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
 
         m_srvDescriptorSize =
@@ -130,6 +130,7 @@ void MapViewer::LoadPipeline() {
         CD3DX12_CPU_DESCRIPTOR_HANDLE interRtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
         interRtvHandle.Offset(FrameCount, m_rtvDescriptorSize);
         CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart());
 
         D3D12_HEAP_PROPERTIES defaultHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
@@ -148,13 +149,14 @@ void MapViewer::LoadPipeline() {
             // Intermediate render targets, the main render pass will go there
             // Post process step takes this as input SRV
             D3D12_RESOURCE_DESC interRTDesc = m_renderTargets[n]->GetDesc();
-            D3D12_CLEAR_VALUE interRTClear{interRTDesc.Format, {0.f, 0.f, 0.f, 1.f}};
+            D3D12_CLEAR_VALUE interRTClear{interRTDesc.Format};
             ThrowIfFailed(m_device->CreateCommittedResource(&defaultHeapProps, D3D12_HEAP_FLAG_NONE,
                                                             &interRTDesc, D3D12_RESOURCE_STATE_RENDER_TARGET,
                                                             &interRTClear, IID_PPV_ARGS(&m_interRTs[n])));
             m_device->CreateRenderTargetView(m_interRTs[n].Get(), nullptr, interRtvHandle);
             interRtvHandle.Offset(1, m_rtvDescriptorSize);
-            // TODO: Create a SRV heap to bind intermediate as resources for post process and create SRVs
+            m_device->CreateShaderResourceView(m_interRTs[n].Get(), nullptr, srvHandle);
+            srvHandle.Offset(1, m_srvDescriptorSize);
 
             // Depth stencil targets
             ThrowIfFailed(m_device->CreateCommittedResource(&defaultHeapProps, D3D12_HEAP_FLAG_NONE,
