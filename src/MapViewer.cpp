@@ -325,7 +325,6 @@ void MapViewer::LoadAssets() {
         m_commandList->CopyBufferRegion(m_indexBuffer.Get(), 0, m_uploadBuffer.Get(), vertexBufferSize,
                                         indexBufferSize);
 
-        // Barriers, batch them together
         const CD3DX12_RESOURCE_BARRIER barriers[2] = {
             CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
                                                  D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER),
@@ -363,14 +362,12 @@ void MapViewer::LoadAssets() {
 
 // Update frame-based values.
 void MapViewer::OnUpdate() {
-    XMVECTOR translate = {(float)m_xt, (float)m_yt, (float)m_zt, 0.f};
-    XMMATRIX translateMat = XMMatrixTranslationFromVector(translate);
-    XMMATRIX rotationMat = XMMatrixRotationRollPitchYaw(XMConvertToRadians((float)-m_xmap),
-                                                        XMConvertToRadians((float)-m_ymap), 0.f);
+    XMMATRIX model = XMMatrixIdentity();
 
-    XMMATRIX model = XMMatrixMultiply(XMMatrixIdentity(), translateMat);
-    XMVECTOR campos = XMVector4Transform(m_camera, rotationMat);
-    XMMATRIX view = XMMatrixLookAtLH(campos, m_lookat, m_updir);
+    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(XMConvertToRadians((float)-m_xmap),
+                                                     XMConvertToRadians((float)-m_ymap), 0.f);
+    XMVECTOR camera = XMVector4Transform(m_camera, rotation);
+    XMMATRIX view = XMMatrixLookAtLH(camera, m_lookat, m_updir);
 
     float aspect = (float)m_width / m_height;
     XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov), aspect, 0.1f, 100000.0f);
