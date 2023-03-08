@@ -363,11 +363,15 @@ void MapViewer::LoadAssets() {
 // Update frame-based values.
 void MapViewer::OnUpdate() {
     XMMATRIX model = XMMatrixIdentity();
-
     XMMATRIX rotation = XMMatrixRotationRollPitchYaw(XMConvertToRadians((float)-m_xmap),
                                                      XMConvertToRadians((float)-m_ymap), 0.f);
+
     XMVECTOR camera = XMVector4Transform(m_camera, rotation);
-    XMMATRIX view = XMMatrixLookAtLH(camera, m_lookat, m_updir);
+    XMVECTOR lookat = XMVector4Transform(m_lookat, rotation);
+    XMVECTOR translate{ -(float)m_xt, -(float)m_yt, (float)m_zt, 0.f };
+    camera += translate;
+    lookat += translate;
+    XMMATRIX view = XMMatrixLookAtLH(camera, lookat, m_updir);
 
     float aspect = (float)m_width / m_height;
     XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov), aspect, 0.1f, 100000.0f);
