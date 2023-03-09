@@ -215,6 +215,7 @@ void MapViewer::LoadAssets() {
     {
         ComPtr<ID3DBlob> vertexShader;
         ComPtr<ID3DBlob> pixelShader;
+        // TODO: Add some shaders for the post process pass
 
 #if defined(_DEBUG)
         // Enable better shader debugging with the graphics debugging tools.
@@ -223,12 +224,12 @@ void MapViewer::LoadAssets() {
         UINT compileFlags = 0;
 #endif
 
-        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/shaders.hlsl").c_str(), nullptr, nullptr,
+        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/basepass.hlsl").c_str(), nullptr, nullptr,
                                          "VSMain", "vs_5_1", compileFlags, 0, &vertexShader, nullptr));
-        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/shaders.hlsl").c_str(), nullptr, nullptr,
+        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/basepass.hlsl").c_str(), nullptr, nullptr,
                                          "PSMain", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
 
-        //  Define the vertex input layout.
+        // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
             {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
              0},
@@ -252,6 +253,7 @@ void MapViewer::LoadAssets() {
         psoDesc.SampleDesc.Count = 1;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
 
+        // TODO: Replace this pso with one that will take care of the post process pass
         D3D12_RASTERIZER_DESC wireRaster = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
         wireRaster.FillMode = D3D12_FILL_MODE_WIREFRAME;
         psoDesc.RasterizerState = wireRaster;
