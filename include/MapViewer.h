@@ -14,6 +14,8 @@
 #include "DXSample.h"
 #include <DirectXMath.h>
 
+#include <array>
+
 using namespace DirectX;
 
 // Note that while ComPtr is used to manage the lifetime of resources on the
@@ -60,6 +62,12 @@ private:
     struct ConstantBuffer {
         XMMATRIX mvp;
         XMMATRIX world;
+    };
+
+    struct ItemMetadata {
+        UINT8 worldIndex;
+        UINT8 roomIndex;
+        XMVECTOR position;
     };
 
     // Pipeline objects.
@@ -116,6 +124,7 @@ private:
 
     std::vector<size_t> m_vertOffsets;
     std::vector<size_t> m_indOffsets;
+    std::array<std::vector<ItemMetadata>, 7> worldItems;
 
     void LoadPipeline();
     void LoadAssets();

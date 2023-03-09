@@ -17,8 +17,8 @@
 #include "assimp/scene.h"
 #include "stdafx.h"
 
-#include <array>
 #include <format>
+#include <fstream>
 
 MapViewer::MapViewer(UINT width, UINT height, std::wstring name)
     : DXSample(width, height, name), m_frameIndex(0), m_width(width), m_height(height),
@@ -299,14 +299,30 @@ void MapViewer::LoadAssets() {
         }
     }
 
+    // Load map metadata for icons overlay
+    {
+        static const std::array<std::string, 2> metafiles{"energytanks.data", "missiles.data"};
+        for (auto &file : metafiles) {
+            std::ifstream f(std::format("data/{}", file).c_str());
+            std::string line;
+
+            while (std::getline(f, line)) {
+                printf("[FILE][%s] %s\n", file.c_str(), line.c_str());
+                // TODO: Parse metadata for items
+            }
+        }
+    }
+
+    // Load icons used for items overlay
+    {
+        static const std::array<std::string, 2> iconfiles{"energytankIcon.png", "missileIcon.png"};
+        // TODO: Load the texture data from the files, need to migrate IOImage files from Model Viewer
+        // Upload the texture data to gpu vram
+        // Create SRVs for the icon textures and place them in srv heaps for overlay rendering
+    }
+
     // Create the vertex buffer.
     {
-        // Note: using upload heaps to transfer static data like vert buffers is
-        // not recommended. Every time the GPU needs it, the upload heap will be
-        // marshalled over. Please read up on Default Heap usage. An upload heap
-        // is used here for code simplicity and because there are very few verts
-        // to actually transfer.
-
         CD3DX12_RANGE readRange(0, 0); // We do not intend to read from these resources on the CPU.
 
         const UINT vertexBufferSize = sizeof(Vertex) * (UINT)vertices.size();
