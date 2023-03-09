@@ -65,8 +65,8 @@ private:
     };
 
     struct ItemMetadata {
-        UINT8 worldIndex;
-        UINT8 roomIndex;
+        UINT worldIndex;
+        UINT roomIndex;
         XMVECTOR position;
     };
 
@@ -124,7 +124,7 @@ private:
 
     std::vector<size_t> m_vertOffsets;
     std::vector<size_t> m_indOffsets;
-    std::array<std::vector<ItemMetadata>, 7> worldItems;
+    std::array<std::vector<ItemMetadata>, 7> m_worldItems;
 
     void LoadPipeline();
     void LoadAssets();

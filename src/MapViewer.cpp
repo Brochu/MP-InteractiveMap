@@ -19,6 +19,7 @@
 
 #include <format>
 #include <fstream>
+#include <sstream>
 
 MapViewer::MapViewer(UINT width, UINT height, std::wstring name)
     : DXSample(width, height, name), m_frameIndex(0), m_width(width), m_height(height),
@@ -299,28 +300,6 @@ void MapViewer::LoadAssets() {
         }
     }
 
-    // Load map metadata for icons overlay
-    {
-        static const std::array<std::string, 2> metafiles{"energytanks.data", "missiles.data"};
-        for (auto &file : metafiles) {
-            std::ifstream f(std::format("data/{}", file).c_str());
-            std::string line;
-
-            while (std::getline(f, line)) {
-                printf("[FILE][%s] %s\n", file.c_str(), line.c_str());
-                // TODO: Parse metadata for items
-            }
-        }
-    }
-
-    // Load icons used for items overlay
-    {
-        static const std::array<std::string, 2> iconfiles{"energytankIcon.png", "missileIcon.png"};
-        // TODO: Load the texture data from the files, need to migrate IOImage files from Model Viewer
-        // Upload the texture data to gpu vram
-        // Create SRVs for the icon textures and place them in srv heaps for overlay rendering
-    }
-
     // Create the vertex buffer.
     {
         CD3DX12_RANGE readRange(0, 0); // We do not intend to read from these resources on the CPU.
@@ -371,6 +350,43 @@ void MapViewer::LoadAssets() {
                                                  D3D12_RESOURCE_STATE_INDEX_BUFFER)};
 
         m_commandList->ResourceBarrier(2, barriers);
+    }
+
+    // Load map metadata for icons overlay
+    {
+        static const std::array<std::string, 2> metafiles{"energytanks.data", "missiles.data"};
+        for (auto &file : metafiles) {
+            std::ifstream f(std::format("data/{}", file).c_str());
+            std::string line;
+
+            while (std::getline(f, line)) {
+                std::stringstream ss(line);
+                UINT worldIndex = 0;
+                ss >> worldIndex;
+                ss.ignore();
+                UINT roomIndex = 0;
+                ss >> roomIndex;
+
+                ss.ignore();
+
+                float x, y, z;
+                ss >> x;
+                ss.ignore(2);
+                ss >> y;
+                ss.ignore(2);
+                ss >> z;
+
+                m_worldItems[worldIndex - 1].push_back({worldIndex, roomIndex, {x, y, z}});
+            }
+        }
+    }
+
+    // Load icons used for items overlay
+    {
+        static const std::array<std::string, 2> iconfiles{"energytankIcon.png", "missileIcon.png"};
+        // TODO: Load the texture data from the files, need to migrate IOImage files from Model Viewer
+        // Upload the texture data to gpu vram
+        // Create SRVs for the icon textures and place them in srv heaps for overlay rendering
     }
 
     // Command lists are created in the recording state, but there is nothing
