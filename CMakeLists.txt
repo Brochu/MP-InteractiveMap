@@ -8,6 +8,8 @@ set (headers
     ${CMAKE_CURRENT_LIST_DIR}/include/d3dx12.h
     ${CMAKE_CURRENT_LIST_DIR}/include/stdafx.h
 
+    ${CMAKE_CURRENT_LIST_DIR}/include/ImageIO.h
+    ${CMAKE_CURRENT_LIST_DIR}/include/Utility.h
     ${CMAKE_CURRENT_LIST_DIR}/include/Win32Application.h
     ${CMAKE_CURRENT_LIST_DIR}/include/DXSample.h
     ${CMAKE_CURRENT_LIST_DIR}/include/DXSampleHelper.h
@@ -28,6 +30,8 @@ set (source
     ${CMAKE_CURRENT_LIST_DIR}/src/Main.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/stdafx.cpp
 
+    ${CMAKE_CURRENT_LIST_DIR}/src/ImageIO.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/Utility.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/Win32Application.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/DXSample.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/MapViewer.cpp
