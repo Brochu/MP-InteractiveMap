@@ -14,8 +14,6 @@ cbuffer PerFrame : register(b0) {
     float4x4 world;
 };
 
-cbuffer PerDraw : register(b1) { uint val; }
-
 struct PSInput {
     float4 position : SV_POSITION;
     float4 normal : NORMAL;
@@ -31,9 +29,6 @@ PSInput VSMain(float4 position : POSITION, float4 normal : NORMAL) {
 }
 
 float4 PSMain(PSInput input) : SV_TARGET {
-    if (val > 0) {
-        return float4(0.71, 0.43, 0.30, 1.0);
-    }
-    return float4(input.normal.xyz, 1.0);
-    // return float4(0.41, 0.13, 0.0, 0.5);
+    // TODO: Look into the transparency, need to split rendering per room
+    return float4(0.41, 0.13, 0.0, 0.5);
 }

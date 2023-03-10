@@ -180,9 +180,6 @@ void MapViewer::LoadAssets() {
         CD3DX12_ROOT_PARAMETER1 constBufferParam;
         constBufferParam.InitAsConstantBufferView(0);
 
-        CD3DX12_ROOT_PARAMETER1 constParam;
-        constParam.InitAsConstants(4, 1);
-
         D3D12_DESCRIPTOR_RANGE1 tableRange{};
         tableRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
         tableRange.NumDescriptors = 2;
@@ -192,9 +189,9 @@ void MapViewer::LoadAssets() {
         CD3DX12_ROOT_PARAMETER1 tableParam;
         tableParam.InitAsDescriptorTable(1, &tableRange);
 
-        CD3DX12_ROOT_PARAMETER1 params[]{constBufferParam, constParam, tableParam};
+        CD3DX12_ROOT_PARAMETER1 params[]{constBufferParam, tableParam};
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(3, params, 0, nullptr,
+        rootSignatureDesc.Init_1_1(2, params, 0, nullptr,
                                    D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
         ComPtr<ID3DBlob> signature;
@@ -556,8 +553,7 @@ void MapViewer::PopulateCommandList() {
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     m_commandList->SetGraphicsRootConstantBufferView(0, m_constBuffer->GetGPUVirtualAddress());
-    m_commandList->SetGraphicsRoot32BitConstant(1, 0, 0);
-    m_commandList->SetGraphicsRootDescriptorTable(2, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
+    m_commandList->SetGraphicsRootDescriptorTable(1, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
