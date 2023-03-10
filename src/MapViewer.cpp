@@ -116,7 +116,7 @@ void MapViewer::LoadPipeline() {
         m_dsvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
         D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
-        srvHeapDesc.NumDescriptors = FrameCount;
+        srvHeapDesc.NumDescriptors = 2 + FrameCount;
         srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
@@ -132,6 +132,7 @@ void MapViewer::LoadPipeline() {
         interRtvHandle.Offset(FrameCount, m_rtvDescriptorSize);
         CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
         CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart());
+        srvHandle.Offset(FrameCount, m_srvDescriptorSize);
 
         D3D12_HEAP_PROPERTIES defaultHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
@@ -174,17 +175,26 @@ void MapViewer::LoadPipeline() {
 
 // Load the sample assets.
 void MapViewer::LoadAssets() {
-    // Create an empty root signature.
+    // Create root signatures.
     {
         CD3DX12_ROOT_PARAMETER1 constBufferParam;
         constBufferParam.InitAsConstantBufferView(0);
 
         CD3DX12_ROOT_PARAMETER1 constParam;
         constParam.InitAsConstants(4, 1);
-        CD3DX12_ROOT_PARAMETER1 params[]{constBufferParam, constParam};
 
+        D3D12_DESCRIPTOR_RANGE1 tableRange{};
+        tableRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        tableRange.NumDescriptors = 2;
+        tableRange.BaseShaderRegister = 0;
+        tableRange.RegisterSpace = 0;
+        tableRange.OffsetInDescriptorsFromTableStart = 0;
+        CD3DX12_ROOT_PARAMETER1 tableParam;
+        tableParam.InitAsDescriptorTable(1, &tableRange);
+
+        CD3DX12_ROOT_PARAMETER1 params[]{constBufferParam, constParam, tableParam};
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(2, params, 0, nullptr,
+        rootSignatureDesc.Init_1_1(3, params, 0, nullptr,
                                    D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
         ComPtr<ID3DBlob> signature;
@@ -521,6 +531,7 @@ void MapViewer::PopulateCommandList() {
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     m_commandList->SetGraphicsRootConstantBufferView(0, m_constBuffer->GetGPUVirtualAddress());
     m_commandList->SetGraphicsRoot32BitConstant(1, 0, 0);
+    m_commandList->SetGraphicsRootDescriptorTable(2, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
