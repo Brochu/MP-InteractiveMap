@@ -202,6 +202,14 @@ void MapViewer::LoadAssets() {
         ThrowIfFailed(D3D12SerializeVersionedRootSignature(&rootSignatureDesc, &signature, &error));
         ThrowIfFailed(m_device->CreateRootSignature(
             0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
+
+        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC postRootSignatureDesc;
+        postRootSignatureDesc.Init_1_1(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
+
+        ThrowIfFailed(D3D12SerializeVersionedRootSignature(&postRootSignatureDesc, &signature, &error));
+        ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(),
+                                                    signature->GetBufferSize(),
+                                                    IID_PPV_ARGS(&m_postRootSignature)));
     }
 
     // Create Constant Buffer for per-frame data
@@ -226,7 +234,8 @@ void MapViewer::LoadAssets() {
     {
         ComPtr<ID3DBlob> vertexShader;
         ComPtr<ID3DBlob> pixelShader;
-        // TODO: Add some shaders for the post process pass
+        ComPtr<ID3DBlob> postVertexShader;
+        ComPtr<ID3DBlob> postPixelShader;
 
 #if defined(_DEBUG)
         // Enable better shader debugging with the graphics debugging tools.
@@ -239,6 +248,12 @@ void MapViewer::LoadAssets() {
                                          "VSMain", "vs_5_1", compileFlags, 0, &vertexShader, nullptr));
         ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/basepass.hlsl").c_str(), nullptr, nullptr,
                                          "PSMain", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/postprocess.hlsl").c_str(), nullptr,
+                                         nullptr, "VSMain", "vs_5_1", compileFlags, 0, &postVertexShader,
+                                         nullptr));
+        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/postprocess.hlsl").c_str(), nullptr,
+                                         nullptr, "PSMain", "ps_5_1", compileFlags, 0, &postPixelShader,
+                                         nullptr));
 
         // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
@@ -255,6 +270,7 @@ void MapViewer::LoadAssets() {
         psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
         psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
         psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
         psoDesc.SampleMask = UINT_MAX;
@@ -264,11 +280,21 @@ void MapViewer::LoadAssets() {
         psoDesc.SampleDesc.Count = 1;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
 
-        // TODO: Replace this pso with one that will take care of the post process pass
-        D3D12_RASTERIZER_DESC wireRaster = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        wireRaster.FillMode = D3D12_FILL_MODE_WIREFRAME;
-        psoDesc.RasterizerState = wireRaster;
-        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_wirePipelineState)));
+        // Post process PSO creation
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC postpsoDesc{};
+        postpsoDesc.InputLayout = {nullptr, 0};
+        postpsoDesc.pRootSignature = m_postRootSignature.Get();
+        postpsoDesc.VS = CD3DX12_SHADER_BYTECODE(postVertexShader.Get());
+        postpsoDesc.PS = CD3DX12_SHADER_BYTECODE(postPixelShader.Get());
+        postpsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        postpsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        postpsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+        postpsoDesc.SampleMask = UINT_MAX;
+        postpsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        postpsoDesc.NumRenderTargets = 1;
+        postpsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        postpsoDesc.SampleDesc.Count = 1;
+        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_postPipelineState)));
     }
 
     // Create the command list.
@@ -568,11 +594,11 @@ void MapViewer::PopulateCommandList() {
 
     // TODO: Implement the wireframe render with a full screen effect
     // Need to look into a edge detection algorithm
-    m_commandList->SetPipelineState(m_wirePipelineState.Get());
-    m_commandList->SetGraphicsRoot32BitConstant(1, 1, 0);
-    m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[m_mapIndex] - indexStart, 1, indexStart,
-                                        vertexStart, 0);
-    m_commandList->SetPipelineState(m_pipelineState.Get());
+    // m_commandList->SetPipelineState(m_wirePipelineState.Get());
+    // m_commandList->SetGraphicsRoot32BitConstant(1, 1, 0);
+    // m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[m_mapIndex] - indexStart, 1, indexStart,
+    //                                    vertexStart, 0);
+    // m_commandList->SetPipelineState(m_pipelineState.Get());
 
     // Indicate that the back buffer will now be used to present.
     D3D12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
