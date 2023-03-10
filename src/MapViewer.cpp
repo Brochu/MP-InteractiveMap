@@ -594,11 +594,9 @@ void MapViewer::PopulateCommandList() {
 
     // TODO: Implement the wireframe render with a full screen effect
     // Need to look into a edge detection algorithm
-    // m_commandList->SetPipelineState(m_wirePipelineState.Get());
-    // m_commandList->SetGraphicsRoot32BitConstant(1, 1, 0);
-    // m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[m_mapIndex] - indexStart, 1, indexStart,
-    //                                    vertexStart, 0);
-    // m_commandList->SetPipelineState(m_pipelineState.Get());
+    m_commandList->SetPipelineState(m_postPipelineState.Get());
+    m_commandList->DrawInstanced(3, 1, 0, 0);
+    m_commandList->SetPipelineState(m_pipelineState.Get());
 
     // Indicate that the back buffer will now be used to present.
     D3D12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
