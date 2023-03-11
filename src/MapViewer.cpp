@@ -11,6 +11,7 @@
 
 #include "MapViewer.h"
 #include "DXSampleHelper.h"
+#include "ImageIO.h"
 
 #include "assimp/Importer.hpp"
 #include "assimp/mesh.h"
@@ -26,7 +27,10 @@ MapViewer::MapViewer(UINT width, UINT height, std::wstring name)
     : DXSample(width, height, name), m_frameIndex(0), m_width(width), m_height(height),
       m_viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)),
       m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height)), m_fenceValues{},
-      m_rtvDescriptorSize(0) {}
+      m_rtvDescriptorSize(0) {
+
+    ::CoInitializeEx(nullptr, ::COINIT_APARTMENTTHREADED | ::COINIT_DISABLE_OLE1DDE);
+}
 
 void MapViewer::OnInit() {
     LoadPipeline();
@@ -457,8 +461,23 @@ void MapViewer::LoadAssets() {
     // Load icons used for items overlay
     {
         static const std::array<std::string, 2> iconfiles{"energytankIcon.png", "missileIcon.png"};
+        static const D3D12_HEAP_PROPERTIES defaultProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart());
+
+        for (auto &file : iconfiles) {
+            int width, height = 0;
+            std::vector<uint8_t> texData =
+                LoadImageFromFile(std::format("data/{}", file).c_str(), 1, &width, &height);
+
+            printf("[IMG][%s] (%i, %i) -> %lld\n", file.c_str(), width, height, texData.size());
+            auto imgDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, width, height);
+            ComPtr<ID3D12Resource> img;
+            m_device->CreateCommittedResource(&defaultProps, D3D12_HEAP_FLAG_NONE, &imgDesc,
+                                              D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&img));
+            m_device->CreateShaderResourceView(img.Get(), nullptr, srvHandle);
+            srvHandle.Offset(1, m_srvDescriptorSize);
+        }
         // TODO: Upload the texture data to gpu vram
-        // Create SRVs for the icon textures and place them in srv heaps for overlay rendering
     }
 
     // Command lists are created in the recording state, but there is nothing
