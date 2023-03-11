@@ -10,6 +10,7 @@
 //*********************************************************
 
 #include "MapViewer.h"
+#include "DXSampleHelper.h"
 
 #include "assimp/Importer.hpp"
 #include "assimp/mesh.h"
@@ -73,6 +74,7 @@ void MapViewer::LoadPipeline() {
     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
     ThrowIfFailed(m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue)));
+    NAME_D3D12_OBJECT(m_commandQueue);
 
     // Describe and create the swap chain.
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -104,6 +106,7 @@ void MapViewer::LoadPipeline() {
         rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
+        NAME_D3D12_OBJECT(m_rtvHeap);
 
         m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
@@ -112,6 +115,7 @@ void MapViewer::LoadPipeline() {
         dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
         dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap)));
+        NAME_D3D12_OBJECT(m_dsvHeap);
 
         m_dsvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
@@ -120,6 +124,7 @@ void MapViewer::LoadPipeline() {
         srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
+        NAME_D3D12_OBJECT(m_srvHeap);
 
         m_srvDescriptorSize =
             m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -165,10 +170,12 @@ void MapViewer::LoadPipeline() {
                                                             &depthDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE,
                                                             &depthClear, IID_PPV_ARGS(&m_depthTargets[n])));
             m_device->CreateDepthStencilView(m_depthTargets[n].Get(), nullptr, dsvHandle);
+            NAME_D3D12_OBJECT_INDEXED(m_depthTargets, n);
             dsvHandle.Offset(1, m_dsvDescriptorSize);
 
             ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
                                                            IID_PPV_ARGS(&m_commandAllocators[n])));
+            NAME_D3D12_OBJECT_INDEXED(m_commandAllocators, n);
         }
     }
 }
@@ -199,6 +206,7 @@ void MapViewer::LoadAssets() {
         ThrowIfFailed(D3D12SerializeVersionedRootSignature(&rootSignatureDesc, &signature, &error));
         ThrowIfFailed(m_device->CreateRootSignature(
             0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
+        NAME_D3D12_OBJECT(m_rootSignature);
 
         // ---------------------------------------------
         CD3DX12_ROOT_PARAMETER1 colorSrvParam;
@@ -219,6 +227,7 @@ void MapViewer::LoadAssets() {
         ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(),
                                                     signature->GetBufferSize(),
                                                     IID_PPV_ARGS(&m_postRootSignature)));
+        NAME_D3D12_OBJECT(m_postRootSignature);
     }
 
     // Create Constant Buffer for per-frame data
@@ -293,6 +302,7 @@ void MapViewer::LoadAssets() {
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
         psoDesc.SampleDesc.Count = 1;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+        NAME_D3D12_OBJECT(m_pipelineState);
 
         // Post process PSO creation
         D3D12_GRAPHICS_PIPELINE_STATE_DESC postpsoDesc{};
@@ -309,12 +319,14 @@ void MapViewer::LoadAssets() {
         postpsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
         postpsoDesc.SampleDesc.Count = 1;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_postPipelineState)));
+        NAME_D3D12_OBJECT(m_postPipelineState);
     }
 
     // Create the command list.
     ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
                                               m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get(),
                                               IID_PPV_ARGS(&m_commandList)));
+    NAME_D3D12_OBJECT(m_commandList);
 
     // Create the vertex buffer.
     {
@@ -370,12 +382,15 @@ void MapViewer::LoadAssets() {
         ThrowIfFailed(m_device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE,
                                                         &uploadBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
                                                         nullptr, IID_PPV_ARGS(&m_uploadBuffer)));
+        NAME_D3D12_OBJECT(m_uploadBuffer);
 
+        // TODO: Look into using placed resources for vertex/index buffers
         D3D12_HEAP_PROPERTIES defaultHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
         D3D12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
         ThrowIfFailed(m_device->CreateCommittedResource(&defaultHeapProps, D3D12_HEAP_FLAG_NONE,
                                                         &vertexBufferDesc, D3D12_RESOURCE_STATE_COPY_DEST,
                                                         nullptr, IID_PPV_ARGS(&m_vertexBuffer)));
+        NAME_D3D12_OBJECT(m_vertexBuffer);
 
         m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
         m_vertexBufferView.StrideInBytes = sizeof(Vertex);
@@ -385,6 +400,7 @@ void MapViewer::LoadAssets() {
         ThrowIfFailed(m_device->CreateCommittedResource(&defaultHeapProps, D3D12_HEAP_FLAG_NONE,
                                                         &indexBufferDesc, D3D12_RESOURCE_STATE_COPY_DEST,
                                                         nullptr, IID_PPV_ARGS(&m_indexBuffer)));
+        NAME_D3D12_OBJECT(m_indexBuffer);
 
         m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
         m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
@@ -456,6 +472,7 @@ void MapViewer::LoadAssets() {
     {
         ThrowIfFailed(m_device->CreateFence(m_fenceValues[m_frameIndex], D3D12_FENCE_FLAG_NONE,
                                             IID_PPV_ARGS(&m_fence)));
+        NAME_D3D12_OBJECT(m_fence);
         m_fenceValues[m_frameIndex]++;
 
         // Create an event handle to use for frame synchronization.
