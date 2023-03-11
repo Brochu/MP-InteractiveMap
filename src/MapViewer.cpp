@@ -334,7 +334,6 @@ void MapViewer::LoadAssets() {
 
             Assimp::Importer importer;
             const aiScene *scene = importer.ReadFile(filepath.c_str(), aiProcess_ConvertToLeftHanded);
-            printf("[SCENE] numMeshes = %i (%s)\n", scene->mNumMeshes, filepath.c_str());
 
             for (unsigned int j = 0; j < scene->mNumMeshes; j++) {
                 m_worldDraws[i].indexStarts.emplace_back(worldGeo.indices.size());
