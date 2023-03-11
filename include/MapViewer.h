@@ -60,15 +60,11 @@ private:
         XMFLOAT4 normal;
     };
 
-    struct Geometry {
-        std::vector<Vertex> vertices;
-        std::vector<unsigned int> indices;
-    };
-
     struct Draws {
         std::vector<size_t> indexStarts;
         std::vector<size_t> vertexStarts;
         std::vector<size_t> indexCount;
+        size_t drawCount;
     };
 
     struct ConstantBuffer {

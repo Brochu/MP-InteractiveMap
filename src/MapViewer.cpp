@@ -307,6 +307,10 @@ void MapViewer::LoadAssets() {
     // Create the vertex buffer.
     {
         // Load 3d model maps for each worlds
+        struct Geometry {
+            std::vector<Vertex> vertices;
+            std::vector<unsigned int> indices;
+        };
         Geometry worldGeo;
         m_worldDraws = {};
 
@@ -340,6 +344,7 @@ void MapViewer::LoadAssets() {
 
                 m_worldDraws[i].indexCount.emplace_back(worldGeo.indices.size() -
                                                         m_worldDraws[i].indexStarts[j]);
+                m_worldDraws[i].drawCount++;
             }
         }
 
@@ -585,7 +590,7 @@ void MapViewer::PopulateCommandList() {
     m_commandList->IASetIndexBuffer(&m_indexBufferView);
 
     Draws &draw = m_worldDraws[m_mapIndex];
-    for (size_t i = 0; i < draw.indexCount.size(); i++) {
+    for (size_t i = 0; i < draw.drawCount; i++) {
         m_commandList->DrawIndexedInstanced((UINT)draw.indexCount[i], 1, (UINT)draw.indexStarts[i],
                                             (UINT)draw.vertexStarts[i], 0);
     }
