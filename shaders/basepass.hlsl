@@ -30,5 +30,5 @@ PSInput VSMain(float4 position : POSITION, float4 normal : NORMAL) {
 
 float4 PSMain(PSInput input) : SV_TARGET {
     // TODO: Look into the transparency, need to split rendering per room
-    return float4(0.41, 0.13, 0.0, 0.5);
+    return float4(0.61, 0.33, 0.0, 0.75);
 }
