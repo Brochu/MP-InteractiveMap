@@ -19,6 +19,7 @@
 // Draw(3)
 
 // TODO: Bind srvs for intermediate RTs
+SamplerState s : register(s0);
 
 void VSMain(in uint VertID : SV_VertexID, out float4 Pos : SV_Position, out float2 Tex : TexCoord0) {
     // Texture coordinates range [0, 2], but only [0, 1] appears on screen.

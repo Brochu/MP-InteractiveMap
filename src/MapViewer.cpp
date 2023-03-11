@@ -189,9 +189,9 @@ void MapViewer::LoadAssets() {
         CD3DX12_ROOT_PARAMETER1 tableParam;
         tableParam.InitAsDescriptorTable(1, &tableRange);
 
-        CD3DX12_ROOT_PARAMETER1 params[]{constBufferParam, tableParam};
+        CD3DX12_ROOT_PARAMETER1 baseParams[]{constBufferParam, tableParam};
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(2, params, 0, nullptr,
+        rootSignatureDesc.Init_1_1(2, baseParams, 0, nullptr,
                                    D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
         ComPtr<ID3DBlob> signature;
@@ -200,8 +200,20 @@ void MapViewer::LoadAssets() {
         ThrowIfFailed(m_device->CreateRootSignature(
             0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
 
+        // ---------------------------------------------
+        CD3DX12_ROOT_PARAMETER1 colorSrvParam;
+        colorSrvParam.InitAsShaderResourceView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE,
+                                               D3D12_SHADER_VISIBILITY_PIXEL);
+        CD3DX12_ROOT_PARAMETER1 normalSrvParam;
+        normalSrvParam.InitAsShaderResourceView(1, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE,
+                                                D3D12_SHADER_VISIBILITY_PIXEL);
+
+        CD3DX12_STATIC_SAMPLER_DESC sampleDesc;
+        sampleDesc.Init(0);
+
+        CD3DX12_ROOT_PARAMETER1 postParams[]{colorSrvParam, normalSrvParam};
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC postRootSignatureDesc;
-        postRootSignatureDesc.Init_1_1(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
+        postRootSignatureDesc.Init_1_1(2, postParams, 1, &sampleDesc, D3D12_ROOT_SIGNATURE_FLAG_NONE);
 
         ThrowIfFailed(D3D12SerializeVersionedRootSignature(&postRootSignatureDesc, &signature, &error));
         ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(),
