@@ -116,7 +116,7 @@ void MapViewer::LoadPipeline() {
         m_dsvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
         D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
-        srvHeapDesc.NumDescriptors = 2 + FrameCount;
+        srvHeapDesc.NumDescriptors = 2 + FrameCount; // Two icon textures + intermediate RTs
         srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
@@ -300,36 +300,41 @@ void MapViewer::LoadAssets() {
                                               IID_PPV_ARGS(&m_commandList)));
 
     // Load 3D model map data
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-    m_vertOffsets = {};
-    m_indOffsets = {};
+    // TODO: Combine with vertex buffer creation
+    m_worldGeo = {};
+    m_worldDraws = {};
     {
-        static const std::array<std::string, 7> worlds{"IntroWorld", "RuinsWorld", "IceWorld",   "OverWorld",
-                                                       "MinesWorld", "LavaWorld",  "CraterWorld"};
+        static const std::array<std::string, WorldCount> worlds{
+            "IntroWorld", "RuinsWorld", "IceWorld", "OverWorld", "MinesWorld", "LavaWorld", "CraterWorld"};
 
-        for (auto &world : worlds) {
-            std::string filepath = std::format("data/{}.obj", world);
+        for (int i = 0; i < WorldCount; i++) {
+            std::string filepath = std::format("data/{}.obj", worlds[i]);
 
             Assimp::Importer importer;
-            const aiScene *scene = importer.ReadFile(
-                filepath.c_str(), aiProcess_ConvertToLeftHanded | aiProcessPreset_TargetRealtime_MaxQuality |
-                                      aiProcess_PreTransformVertices);
+            const aiScene *scene = importer.ReadFile(filepath.c_str(), aiProcess_ConvertToLeftHanded);
             printf("[SCENE] numMeshes = %i (%s)\n", scene->mNumMeshes, filepath.c_str());
-            aiMesh *mesh = scene->mMeshes[0]; // For the map models, we only have one mesh
 
-            for (UINT i = 0; i < mesh->mNumVertices; i++) {
-                aiVector3D vert = mesh->mVertices[i];
-                aiVector3D norm = mesh->mNormals[i];
-                vertices.push_back({{vert.x, vert.y, vert.z, 1.f}, {norm.x, norm.y, norm.z, 0.f}});
-            }
-            for (UINT i = 0; i < mesh->mNumFaces; i++) {
-                for (UINT j = 0; j < mesh->mFaces[i].mNumIndices; j++) {
-                    indices.emplace_back(mesh->mFaces[i].mIndices[j]);
+            for (unsigned int j = 0; j < scene->mNumMeshes; j++) {
+                m_worldDraws[i].indexStarts.emplace_back(m_worldGeo.indices.size());
+                m_worldDraws[i].vertexStarts.emplace_back(m_worldGeo.vertices.size());
+
+                aiMesh *mesh = scene->mMeshes[j];
+
+                for (UINT i = 0; i < mesh->mNumVertices; i++) {
+                    aiVector3D vert = mesh->mVertices[i];
+                    aiVector3D norm = mesh->mNormals[i];
+                    m_worldGeo.vertices.push_back(
+                        {{vert.x, vert.y, vert.z, 1.f}, {norm.x, norm.y, norm.z, 0.f}});
                 }
+                for (UINT i = 0; i < mesh->mNumFaces; i++) {
+                    for (UINT j = 0; j < mesh->mFaces[i].mNumIndices; j++) {
+                        m_worldGeo.indices.emplace_back(mesh->mFaces[i].mIndices[j]);
+                    }
+                }
+
+                m_worldDraws[i].indexCount.emplace_back(m_worldGeo.indices.size() -
+                                                        m_worldDraws[i].indexStarts[j]);
             }
-            m_vertOffsets.emplace_back(vertices.size());
-            m_indOffsets.emplace_back(indices.size());
         }
     }
 
@@ -337,8 +342,8 @@ void MapViewer::LoadAssets() {
     {
         CD3DX12_RANGE readRange(0, 0); // We do not intend to read from these resources on the CPU.
 
-        const UINT vertexBufferSize = sizeof(Vertex) * (UINT)vertices.size();
-        const UINT indexBufferSize = sizeof(unsigned int) * (UINT)indices.size();
+        const UINT vertexBufferSize = sizeof(Vertex) * (UINT)m_worldGeo.vertices.size();
+        const UINT indexBufferSize = sizeof(unsigned int) * (UINT)m_worldGeo.indices.size();
 
         D3D12_HEAP_PROPERTIES uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
         D3D12_RESOURCE_DESC uploadBufferDesc =
@@ -366,10 +371,10 @@ void MapViewer::LoadAssets() {
         m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
         m_indexBufferView.SizeInBytes = indexBufferSize;
 
-        void *pUpload;
-        ThrowIfFailed(m_uploadBuffer->Map(0, &readRange, &pUpload));
-        memcpy(pUpload, vertices.data(), vertexBufferSize);
-        memcpy(static_cast<unsigned char *>(pUpload) + vertexBufferSize, indices.data(), indexBufferSize);
+        unsigned char *pUpload;
+        ThrowIfFailed(m_uploadBuffer->Map(0, &readRange, (void **)&pUpload));
+        memcpy(pUpload, m_worldGeo.vertices.data(), vertexBufferSize);
+        memcpy(pUpload + vertexBufferSize, m_worldGeo.indices.data(), indexBufferSize);
         m_uploadBuffer->Unmap(0, nullptr);
 
         m_commandList->CopyBufferRegion(m_vertexBuffer.Get(), 0, m_uploadBuffer.Get(), 0, vertexBufferSize);
@@ -417,8 +422,7 @@ void MapViewer::LoadAssets() {
     // Load icons used for items overlay
     {
         static const std::array<std::string, 2> iconfiles{"energytankIcon.png", "missileIcon.png"};
-        // TODO: Load the texture data from the files, need to migrate IOImage files from Model Viewer
-        // Upload the texture data to gpu vram
+        // TODO: Upload the texture data to gpu vram
         // Create SRVs for the icon textures and place them in srv heaps for overlay rendering
     }
 
@@ -577,16 +581,11 @@ void MapViewer::PopulateCommandList() {
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     m_commandList->IASetIndexBuffer(&m_indexBufferView);
 
-    UINT indexStart = 0;
-    UINT vertexStart = 0;
-    if (m_mapIndex > 0) {
-        indexStart = (UINT)m_indOffsets[m_mapIndex - 1];
-        vertexStart = (UINT)m_vertOffsets[m_mapIndex - 1];
+    Draws &draw = m_worldDraws[m_mapIndex];
+    for (size_t i = 0; i < draw.indexCount.size(); i++) {
+        m_commandList->DrawIndexedInstanced((UINT)draw.indexCount[i], 1, (UINT)draw.indexStarts[i],
+                                            (UINT)draw.vertexStarts[i], 0);
     }
-    m_commandList->DrawIndexedInstanced((UINT)m_indOffsets[m_mapIndex] - indexStart, 1, indexStart,
-                                        vertexStart, 0);
-    // TODO: Find a better way to package draw calls
-    //  Do we need to split each map in a draw call per room?
 
     // TODO: Implement the wireframe render with a full screen effect
     // Need to look into a edge detection algorithm

@@ -48,6 +48,7 @@ private:
     // that excessive buffering of frames dependent on user input may result
     // in noticeable latency in your app.
     static const UINT FrameCount = 2;
+    static const UINT WorldCount = 7;
 
     struct Vertex {
         Vertex(XMFLOAT4 p, XMFLOAT4 n) {
@@ -57,6 +58,17 @@ private:
 
         XMFLOAT4 position;
         XMFLOAT4 normal;
+    };
+
+    struct Geometry {
+        std::vector<Vertex> vertices;
+        std::vector<unsigned int> indices;
+    };
+
+    struct Draws {
+        std::vector<size_t> indexStarts;
+        std::vector<size_t> vertexStarts;
+        std::vector<size_t> indexCount;
     };
 
     struct ConstantBuffer {
@@ -123,9 +135,9 @@ private:
     XMVECTOR m_updir = {0.0, 1.0, 0.0, 0.0};
     float m_fov = 45.0;
 
-    std::vector<size_t> m_vertOffsets;
-    std::vector<size_t> m_indOffsets;
-    std::array<std::vector<ItemMetadata>, 7> m_worldItems;
+    Geometry m_worldGeo;
+    std::array<Draws, WorldCount> m_worldDraws;
+    std::array<std::vector<ItemMetadata>, WorldCount> m_worldItems;
 
     void LoadPipeline();
     void LoadAssets();
