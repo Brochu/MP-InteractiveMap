@@ -299,11 +299,12 @@ void MapViewer::LoadAssets() {
                                               m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get(),
                                               IID_PPV_ARGS(&m_commandList)));
 
-    // Load 3D model map data
-    // TODO: Combine with vertex buffer creation
-    m_worldGeo = {};
-    m_worldDraws = {};
+    // Create the vertex buffer.
     {
+        // Load 3d model maps for each worlds
+        Geometry worldGeo;
+        m_worldDraws = {};
+
         static const std::array<std::string, WorldCount> worlds{
             "IntroWorld", "RuinsWorld", "IceWorld", "OverWorld", "MinesWorld", "LavaWorld", "CraterWorld"};
 
@@ -315,35 +316,32 @@ void MapViewer::LoadAssets() {
             printf("[SCENE] numMeshes = %i (%s)\n", scene->mNumMeshes, filepath.c_str());
 
             for (unsigned int j = 0; j < scene->mNumMeshes; j++) {
-                m_worldDraws[i].indexStarts.emplace_back(m_worldGeo.indices.size());
-                m_worldDraws[i].vertexStarts.emplace_back(m_worldGeo.vertices.size());
+                m_worldDraws[i].indexStarts.emplace_back(worldGeo.indices.size());
+                m_worldDraws[i].vertexStarts.emplace_back(worldGeo.vertices.size());
 
                 aiMesh *mesh = scene->mMeshes[j];
 
                 for (UINT i = 0; i < mesh->mNumVertices; i++) {
                     aiVector3D vert = mesh->mVertices[i];
                     aiVector3D norm = mesh->mNormals[i];
-                    m_worldGeo.vertices.push_back(
+                    worldGeo.vertices.push_back(
                         {{vert.x, vert.y, vert.z, 1.f}, {norm.x, norm.y, norm.z, 0.f}});
                 }
                 for (UINT i = 0; i < mesh->mNumFaces; i++) {
                     for (UINT j = 0; j < mesh->mFaces[i].mNumIndices; j++) {
-                        m_worldGeo.indices.emplace_back(mesh->mFaces[i].mIndices[j]);
+                        worldGeo.indices.emplace_back(mesh->mFaces[i].mIndices[j]);
                     }
                 }
 
-                m_worldDraws[i].indexCount.emplace_back(m_worldGeo.indices.size() -
+                m_worldDraws[i].indexCount.emplace_back(worldGeo.indices.size() -
                                                         m_worldDraws[i].indexStarts[j]);
             }
         }
-    }
 
-    // Create the vertex buffer.
-    {
         CD3DX12_RANGE readRange(0, 0); // We do not intend to read from these resources on the CPU.
 
-        const UINT vertexBufferSize = sizeof(Vertex) * (UINT)m_worldGeo.vertices.size();
-        const UINT indexBufferSize = sizeof(unsigned int) * (UINT)m_worldGeo.indices.size();
+        const UINT vertexBufferSize = sizeof(Vertex) * (UINT)worldGeo.vertices.size();
+        const UINT indexBufferSize = sizeof(unsigned int) * (UINT)worldGeo.indices.size();
 
         D3D12_HEAP_PROPERTIES uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
         D3D12_RESOURCE_DESC uploadBufferDesc =
@@ -373,8 +371,8 @@ void MapViewer::LoadAssets() {
 
         unsigned char *pUpload;
         ThrowIfFailed(m_uploadBuffer->Map(0, &readRange, (void **)&pUpload));
-        memcpy(pUpload, m_worldGeo.vertices.data(), vertexBufferSize);
-        memcpy(pUpload + vertexBufferSize, m_worldGeo.indices.data(), indexBufferSize);
+        memcpy(pUpload, worldGeo.vertices.data(), vertexBufferSize);
+        memcpy(pUpload + vertexBufferSize, worldGeo.indices.data(), indexBufferSize);
         m_uploadBuffer->Unmap(0, nullptr);
 
         m_commandList->CopyBufferRegion(m_vertexBuffer.Get(), 0, m_uploadBuffer.Get(), 0, vertexBufferSize);

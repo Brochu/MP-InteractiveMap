@@ -135,7 +135,6 @@ private:
     XMVECTOR m_updir = {0.0, 1.0, 0.0, 0.0};
     float m_fov = 45.0;
 
-    Geometry m_worldGeo;
     std::array<Draws, WorldCount> m_worldDraws;
     std::array<std::vector<ItemMetadata>, WorldCount> m_worldItems;
 
