@@ -673,7 +673,10 @@ void MapViewer::PopulateCommandList() {
     // TODO: Implement the wireframe render with a full screen effect
     // Need to look into a edge detection algorithm
     m_commandList->SetPipelineState(m_postPipelineState.Get());
-    m_commandList->DrawInstanced(3, 1, 0, 0);
+    m_commandList->SetGraphicsRootSignature(m_postRootSignature.Get());
+    m_commandList->SetGraphicsRootShaderResourceView(0, m_interRTs[m_frameIndex]->GetGPUVirtualAddress());
+
+    // m_commandList->DrawInstanced(3, 1, 0, 0);
     m_commandList->SetPipelineState(m_pipelineState.Get());
 
     // Indicate that the back buffer will now be used to present.

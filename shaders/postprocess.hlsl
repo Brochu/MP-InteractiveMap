@@ -19,6 +19,9 @@
 // Draw(3)
 
 // TODO: Bind srvs for intermediate RTs
+Texture2D colorRT : register(t0);
+Texture2D normalRT : register(t1);
+
 SamplerState s : register(s0);
 
 void VSMain(in uint VertID : SV_VertexID, out float4 Pos : SV_Position, out float2 Tex : TexCoord0) {
