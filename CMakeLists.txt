@@ -50,6 +50,7 @@ set (libs
     d3d12.lib
     d3dcompiler.lib
     dxgi.lib
+    dxguid.lib
 
     assimp-vc143-mt.lib
 )
