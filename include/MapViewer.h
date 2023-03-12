@@ -109,6 +109,9 @@ private:
 
     ComPtr<ID3D12Resource> m_constBuffer;
 
+    ComPtr<ID3D12Resource> m_imgUploadBuffer[2];
+    ComPtr<ID3D12Resource> m_img[2];
+
     // Synchronization objects.
     UINT m_frameIndex;
     HANDLE m_fenceEvent;

@@ -466,16 +466,33 @@ void MapViewer::LoadAssets() {
         static const D3D12_HEAP_PROPERTIES uploadProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
         CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart());
 
-        for (auto &file : iconfiles) {
+        for (int i = 0; i < iconfiles.size(); i++) {
             int width, height = 0;
             std::vector<uint8_t> texData =
-                LoadImageFromFile(std::format("data/{}", file).c_str(), 1, &width, &height);
-            printf("[IMG][%s] (%i, %i) -> %lld\n", file.c_str(), width, height, texData.size());
+                LoadImageFromFile(std::format("data/{}", iconfiles[i]).c_str(), 1, &width, &height);
+            printf("[IMG][%s] (%i, %i) -> %lld\n", iconfiles[i].c_str(), width, height, texData.size());
 
-            auto imgDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, width, height);
-            ComPtr<ID3D12Resource> img;
+            auto imgDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, width, height, 1, 1);
             m_device->CreateCommittedResource(&defaultProps, D3D12_HEAP_FLAG_NONE, &imgDesc,
-                                              D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&img));
+                                              D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
+                                              IID_PPV_ARGS(&m_img[i]));
+
+            auto uploadBufferSize = GetRequiredIntermediateSize(m_img[i].Get(), 0, 1);
+            auto uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+            m_device->CreateCommittedResource(&uploadProps, D3D12_HEAP_FLAG_NONE, &uploadBufferDesc,
+                                              D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+                                              IID_PPV_ARGS(&m_imgUploadBuffer[i]));
+
+            D3D12_SUBRESOURCE_DATA srcData;
+            srcData.pData = texData.data();
+            srcData.RowPitch = width * 4;
+            srcData.SlicePitch = width * height * 4;
+
+            UpdateSubresources(m_commandList.Get(), m_img[i].Get(), m_imgUploadBuffer[i].Get(), 0, 0, 1,
+                               &srcData);
+            const auto transition = CD3DX12_RESOURCE_BARRIER::Transition(
+                m_img[i].Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+            m_commandList->ResourceBarrier(1, &transition);
 
             D3D12_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc = {};
             shaderResourceViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -484,29 +501,11 @@ void MapViewer::LoadAssets() {
             shaderResourceViewDesc.Texture2D.MipLevels = 1;
             shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
             shaderResourceViewDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-            m_device->CreateShaderResourceView(img.Get(), &shaderResourceViewDesc, srvHandle);
+
+            m_device->CreateShaderResourceView(m_img[i].Get(), &shaderResourceViewDesc, srvHandle);
             srvHandle.Offset(1, m_srvDescriptorSize);
-
-            // TODO: Find out reason for linker error with GetRequiredIntermediateSize()
-            // const auto uploadBufferSize = GetRequiredIntermediateSize(img.Get(), 0, 1);
-            // auto uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
-            // printf("[IMG] upload size = %lld\n", uploadBufferSize);
-            // ComPtr<ID3D12Resource> uploadBuffer;
-            // m_device->CreateCommittedResource(&uploadProps, D3D12_HEAP_FLAG_NONE, &uploadBufferDesc,
-            //                                  D3D12_RESOURCE_STATE_COPY_SOURCE, nullptr,
-            //                                  IID_PPV_ARGS(&uploadBuffer));
-
-            // D3D12_SUBRESOURCE_DATA srcData;
-            // srcData.pData = texData.data();
-            // srcData.RowPitch = width * 4;
-            // srcData.SlicePitch = width * height * 4;
-
-            // UpdateSubresources (m_commandList.Get(), img.Get (), uploadBuffer.Get (), 0, 0, 1, &srcData);
-            // const auto transition = CD3DX12_RESOURCE_BARRIER::Transition (img.Get (),
-            //     D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-            // m_commandList->ResourceBarrier (1, &transition);
         }
-        // TODO: Upload the texture data to gpu vram
+        // TODO: Find a way to upload texture data in one batch
     }
 
     // Command lists are created in the recording state, but there is nothing
