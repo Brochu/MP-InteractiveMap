@@ -19,6 +19,11 @@ struct PSInput {
     float4 normal : NORMAL;
 };
 
+struct PSOutput {
+    float4 color : SV_TARGET0;
+    float4 normal : SV_TARGET1;
+};
+
 PSInput VSMain(float4 position : POSITION, float4 normal : NORMAL) {
     PSInput result;
 
@@ -28,7 +33,11 @@ PSInput VSMain(float4 position : POSITION, float4 normal : NORMAL) {
     return result;
 }
 
-float4 PSMain(PSInput input) : SV_TARGET {
-    // TODO: Look into the transparency, need to split rendering per room
-    return float4(0.61, 0.33, 0.0, 0.75);
+PSOutput PSMain(PSInput input) {
+    float3 norm = input.normal;
+
+    PSOutput output;
+    output.color = float4(0.61, 0.33, 0.0, 0.75);
+    output.normal = float4(norm.x, norm.y, norm.z, 1.0);
+    return output;
 }
