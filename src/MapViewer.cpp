@@ -181,6 +181,10 @@ void MapViewer::LoadPipeline() {
                                                            IID_PPV_ARGS(&m_commandAllocators[n])));
             NAME_D3D12_OBJECT_INDEXED(m_commandAllocators, n);
         }
+
+        for (UINT n = 0; n < FrameCount; n++) {
+            // TODO: Create extra render targets for color renders (w/ SRVs)
+        }
     }
 }
 
@@ -657,7 +661,7 @@ void MapViewer::PopulateCommandList() {
                                             FrameCount + m_frameIndex, m_rtvDescriptorSize);
     CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex,
                                             m_dsvDescriptorSize);
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvs[2] {rtvHandle, normalRTV};
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvs[2]{rtvHandle, normalRTV};
     m_commandList->OMSetRenderTargets(2, rtvs, FALSE, &dsvHandle);
 
     // Record commands.
