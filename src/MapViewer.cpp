@@ -231,9 +231,12 @@ void MapViewer::LoadAssets() {
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC postRootSignatureDesc;
         postRootSignatureDesc.Init_1_1(1, &srvTableParam, 1, &sampleDesc, D3D12_ROOT_SIGNATURE_FLAG_NONE);
 
-        ThrowIfFailed(D3D12SerializeVersionedRootSignature(&postRootSignatureDesc, &signature, &error));
-        ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(),
-                                                    signature->GetBufferSize(),
+        ComPtr<ID3DBlob> postSignature;
+        ComPtr<ID3DBlob> postError;
+        ThrowIfFailed(
+            D3D12SerializeVersionedRootSignature(&postRootSignatureDesc, &postSignature, &postError));
+        ThrowIfFailed(m_device->CreateRootSignature(0, postSignature->GetBufferPointer(),
+                                                    postSignature->GetBufferSize(),
                                                     IID_PPV_ARGS(&m_postRootSignature)));
         NAME_D3D12_OBJECT(m_postRootSignature);
     }
@@ -329,14 +332,16 @@ void MapViewer::LoadAssets() {
         postpsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         postpsoDesc.NumRenderTargets = 1;
         postpsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        postpsoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
         postpsoDesc.SampleDesc.Count = 1;
-        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_postPipelineState)));
+        ThrowIfFailed(
+            m_device->CreateGraphicsPipelineState(&postpsoDesc, IID_PPV_ARGS(&m_postPipelineState)));
         NAME_D3D12_OBJECT(m_postPipelineState);
     }
 
     // Create the command list.
     ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                              m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get(),
+                                              m_commandAllocators[m_frameIndex].Get(), nullptr,
                                               IID_PPV_ARGS(&m_commandList)));
     NAME_D3D12_OBJECT(m_commandList);
 
@@ -646,6 +651,7 @@ void MapViewer::PopulateCommandList() {
     ThrowIfFailed(m_commandList->Reset(m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get()));
 
     // Set necessary state.
+    m_commandList->SetPipelineState(m_pipelineState.Get());
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     m_commandList->SetGraphicsRootConstantBufferView(0, m_constBuffer->GetGPUVirtualAddress());
     m_commandList->RSSetViewports(1, &m_viewport);
@@ -698,6 +704,7 @@ void MapViewer::PopulateCommandList() {
                                              D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
     };
     m_commandList->ResourceBarrier(2, post_barrier);
+
     // TODO: Implement the wireframe render with a full screen effect
     // Need to look into a edge detection algorithm
     m_commandList->SetPipelineState(m_postPipelineState.Get());
@@ -710,8 +717,7 @@ void MapViewer::PopulateCommandList() {
                                       m_rtvDescriptorSize);
     m_commandList->OMSetRenderTargets(1, &rtv, FALSE, nullptr);
 
-    // m_commandList->DrawInstanced(3, 1, 0, 0);
-    m_commandList->SetPipelineState(m_pipelineState.Get());
+    m_commandList->DrawInstanced(3, 1, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     D3D12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(

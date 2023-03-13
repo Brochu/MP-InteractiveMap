@@ -21,7 +21,6 @@
 // TODO: Bind srvs for intermediate RTs
 Texture2D colorRT : register(t0);
 Texture2D normalRT : register(t1);
-
 SamplerState s : register(s0);
 
 void VSMain(in uint VertID : SV_VertexID, out float4 Pos : SV_Position, out float2 Tex : TexCoord0) {
@@ -31,5 +30,6 @@ void VSMain(in uint VertID : SV_VertexID, out float4 Pos : SV_Position, out floa
 }
 
 float4 PSMain(float4 pos : SV_Position, float2 tex : TEXCOORD0) : SV_TARGET {
-    return float4(0.71, 0.43, 0.30, 1.0);
+    return normalRT.Sample(s, tex);
+    // return float4(0.71, 0.43, 0.30, 1.0);
 }
