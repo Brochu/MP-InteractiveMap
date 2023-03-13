@@ -302,8 +302,9 @@ void MapViewer::LoadAssets() {
         psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
         psoDesc.SampleMask = UINT_MAX;
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        psoDesc.NumRenderTargets = 1;
+        psoDesc.NumRenderTargets = 2;
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.RTVFormats[1] = DXGI_FORMAT_R8G8B8A8_UNORM;
         psoDesc.SampleDesc.Count = 1;
         ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
         NAME_D3D12_OBJECT(m_pipelineState);
@@ -652,9 +653,12 @@ void MapViewer::PopulateCommandList() {
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex,
                                             m_rtvDescriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE normalRTV(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(),
+                                            FrameCount + m_frameIndex, m_rtvDescriptorSize);
     CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex,
                                             m_dsvDescriptorSize);
-    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvs[2] {rtvHandle, normalRTV};
+    m_commandList->OMSetRenderTargets(2, rtvs, FALSE, &dsvHandle);
 
     // Record commands.
     const float clearColor[] = {0.f, 0.f, 0.f, 1.f};
