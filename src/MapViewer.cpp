@@ -169,17 +169,17 @@ void MapViewer::LoadPipeline() {
             interRTClear.Color[1] = 0.f;
             interRTClear.Color[2] = 0.f;
             interRTClear.Color[3] = 1.f;
-            ThrowIfFailed(m_device->CreateCommittedResource(&defaultHeapProps, D3D12_HEAP_FLAG_NONE,
-                                                            &interRTDesc, D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                                            &interRTClear, IID_PPV_ARGS(&m_normalRTs[n])));
+            ThrowIfFailed(m_device->CreateCommittedResource(
+                &defaultHeapProps, D3D12_HEAP_FLAG_NONE, &interRTDesc,
+                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &interRTClear, IID_PPV_ARGS(&m_normalRTs[n])));
             m_device->CreateRenderTargetView(m_normalRTs[n].Get(), nullptr, normalRtvHandle);
             normalRtvHandle.Offset(1, m_rtvDescriptorSize);
             m_device->CreateShaderResourceView(m_normalRTs[n].Get(), nullptr, normalSrvHandle);
             normalSrvHandle.Offset(1, m_srvDescriptorSize);
 
-            ThrowIfFailed(m_device->CreateCommittedResource(&defaultHeapProps, D3D12_HEAP_FLAG_NONE,
-                                                            &interRTDesc, D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                                            &interRTClear, IID_PPV_ARGS(&m_colorRTs[n])));
+            ThrowIfFailed(m_device->CreateCommittedResource(
+                &defaultHeapProps, D3D12_HEAP_FLAG_NONE, &interRTDesc,
+                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &interRTClear, IID_PPV_ARGS(&m_colorRTs[n])));
             m_device->CreateRenderTargetView(m_colorRTs[n].Get(), nullptr, colorRtvHandle);
             colorRtvHandle.Offset(1, m_rtvDescriptorSize);
             m_device->CreateShaderResourceView(m_colorRTs[n].Get(), nullptr, colorSrvHandle);
@@ -652,10 +652,18 @@ void MapViewer::PopulateCommandList() {
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
     // Indicate that the back buffer will be used as a render target.
-    D3D12_RESOURCE_BARRIER render_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT,
-        D3D12_RESOURCE_STATE_RENDER_TARGET);
-    m_commandList->ResourceBarrier(1, &render_barrier);
+    D3D12_RESOURCE_BARRIER render_barrier[]{
+        CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(),
+                                             D3D12_RESOURCE_STATE_PRESENT,
+                                             D3D12_RESOURCE_STATE_RENDER_TARGET),
+        CD3DX12_RESOURCE_BARRIER::Transition(m_colorRTs[m_frameIndex].Get(),
+                                             D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+                                             D3D12_RESOURCE_STATE_RENDER_TARGET),
+        CD3DX12_RESOURCE_BARRIER::Transition(m_normalRTs[m_frameIndex].Get(),
+                                             D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+                                             D3D12_RESOURCE_STATE_RENDER_TARGET),
+    };
+    m_commandList->ResourceBarrier(3, render_barrier);
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(),
                                             (FrameCount * 2) + m_frameIndex, m_rtvDescriptorSize);
@@ -681,6 +689,15 @@ void MapViewer::PopulateCommandList() {
                                             (UINT)draw.vertexStarts[i], 0);
     }
 
+    D3D12_RESOURCE_BARRIER post_barrier[]{
+        CD3DX12_RESOURCE_BARRIER::Transition(m_colorRTs[m_frameIndex].Get(),
+                                             D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                             D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+        CD3DX12_RESOURCE_BARRIER::Transition(m_normalRTs[m_frameIndex].Get(),
+                                             D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                             D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+    };
+    m_commandList->ResourceBarrier(2, post_barrier);
     // TODO: Implement the wireframe render with a full screen effect
     // Need to look into a edge detection algorithm
     m_commandList->SetPipelineState(m_postPipelineState.Get());
