@@ -106,7 +106,7 @@ void MapViewer::LoadPipeline() {
     {
         // Describe and create a render target view (RTV) descriptor heap.
         D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-        rtvHeapDesc.NumDescriptors = FrameCount * 2;
+        rtvHeapDesc.NumDescriptors = FrameCount * 3;
         rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
@@ -124,7 +124,7 @@ void MapViewer::LoadPipeline() {
         m_dsvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
         D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
-        srvHeapDesc.NumDescriptors = 2 + FrameCount; // Two icon textures + intermediate RTs
+        srvHeapDesc.NumDescriptors = 2 + (FrameCount * 2); // Two icon textures + intermediate RTs
         srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
@@ -137,11 +137,15 @@ void MapViewer::LoadPipeline() {
     // Create frame resources.
     {
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-        CD3DX12_CPU_DESCRIPTOR_HANDLE interRtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-        interRtvHandle.Offset(FrameCount, m_rtvDescriptorSize);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE normalRtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+        normalRtvHandle.Offset(FrameCount, m_rtvDescriptorSize);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE colorRtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+        colorRtvHandle.Offset(FrameCount * 2, m_rtvDescriptorSize);
         CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
-        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart());
-        srvHandle.Offset(FrameCount, m_srvDescriptorSize);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE normalSrvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart());
+        normalSrvHandle.Offset(FrameCount, m_srvDescriptorSize);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE colorSrvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart());
+        colorSrvHandle.Offset(FrameCount * 2, m_srvDescriptorSize);
 
         D3D12_HEAP_PROPERTIES defaultHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
@@ -161,13 +165,25 @@ void MapViewer::LoadPipeline() {
             // Post process step takes this as input SRV
             D3D12_RESOURCE_DESC interRTDesc = m_renderTargets[n]->GetDesc();
             D3D12_CLEAR_VALUE interRTClear{interRTDesc.Format};
+            interRTClear.Color[0] = 0.f;
+            interRTClear.Color[1] = 0.f;
+            interRTClear.Color[2] = 0.f;
+            interRTClear.Color[3] = 1.f;
             ThrowIfFailed(m_device->CreateCommittedResource(&defaultHeapProps, D3D12_HEAP_FLAG_NONE,
                                                             &interRTDesc, D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                                            &interRTClear, IID_PPV_ARGS(&m_interRTs[n])));
-            m_device->CreateRenderTargetView(m_interRTs[n].Get(), nullptr, interRtvHandle);
-            interRtvHandle.Offset(1, m_rtvDescriptorSize);
-            m_device->CreateShaderResourceView(m_interRTs[n].Get(), nullptr, srvHandle);
-            srvHandle.Offset(1, m_srvDescriptorSize);
+                                                            &interRTClear, IID_PPV_ARGS(&m_normalRTs[n])));
+            m_device->CreateRenderTargetView(m_normalRTs[n].Get(), nullptr, normalRtvHandle);
+            normalRtvHandle.Offset(1, m_rtvDescriptorSize);
+            m_device->CreateShaderResourceView(m_normalRTs[n].Get(), nullptr, normalSrvHandle);
+            normalSrvHandle.Offset(1, m_srvDescriptorSize);
+
+            ThrowIfFailed(m_device->CreateCommittedResource(&defaultHeapProps, D3D12_HEAP_FLAG_NONE,
+                                                            &interRTDesc, D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                                            &interRTClear, IID_PPV_ARGS(&m_colorRTs[n])));
+            m_device->CreateRenderTargetView(m_colorRTs[n].Get(), nullptr, colorRtvHandle);
+            colorRtvHandle.Offset(1, m_rtvDescriptorSize);
+            m_device->CreateShaderResourceView(m_colorRTs[n].Get(), nullptr, colorSrvHandle);
+            colorSrvHandle.Offset(1, m_srvDescriptorSize);
 
             // Depth stencil targets
             ThrowIfFailed(m_device->CreateCommittedResource(&defaultHeapProps, D3D12_HEAP_FLAG_NONE,
@@ -181,10 +197,6 @@ void MapViewer::LoadPipeline() {
                                                            IID_PPV_ARGS(&m_commandAllocators[n])));
             NAME_D3D12_OBJECT_INDEXED(m_commandAllocators, n);
         }
-
-        for (UINT n = 0; n < FrameCount; n++) {
-            // TODO: Create extra render targets for color renders (w/ SRVs)
-        }
     }
 }
 
@@ -195,18 +207,9 @@ void MapViewer::LoadAssets() {
         CD3DX12_ROOT_PARAMETER1 constBufferParam;
         constBufferParam.InitAsConstantBufferView(0);
 
-        D3D12_DESCRIPTOR_RANGE1 tableRange{};
-        tableRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-        tableRange.NumDescriptors = 2;
-        tableRange.BaseShaderRegister = 0;
-        tableRange.RegisterSpace = 0;
-        tableRange.OffsetInDescriptorsFromTableStart = 0;
-        CD3DX12_ROOT_PARAMETER1 tableParam;
-        tableParam.InitAsDescriptorTable(1, &tableRange);
-
-        CD3DX12_ROOT_PARAMETER1 baseParams[]{constBufferParam, tableParam};
+        CD3DX12_ROOT_PARAMETER1 baseParams[]{constBufferParam};
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(2, baseParams, 0, nullptr,
+        rootSignatureDesc.Init_1_1(1, baseParams, 0, nullptr,
                                    D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
         ComPtr<ID3DBlob> signature;
@@ -217,19 +220,16 @@ void MapViewer::LoadAssets() {
         NAME_D3D12_OBJECT(m_rootSignature);
 
         // ---------------------------------------------
-        CD3DX12_ROOT_PARAMETER1 colorSrvParam;
-        colorSrvParam.InitAsShaderResourceView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE,
-                                               D3D12_SHADER_VISIBILITY_PIXEL);
-        CD3DX12_ROOT_PARAMETER1 normalSrvParam;
-        normalSrvParam.InitAsShaderResourceView(1, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE,
-                                                D3D12_SHADER_VISIBILITY_PIXEL);
+        CD3DX12_DESCRIPTOR_RANGE1 srvRange{};
+        srvRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0);
+        CD3DX12_ROOT_PARAMETER1 srvTableParam;
+        srvTableParam.InitAsDescriptorTable(1, &srvRange, D3D12_SHADER_VISIBILITY_PIXEL);
 
         CD3DX12_STATIC_SAMPLER_DESC sampleDesc;
         sampleDesc.Init(0);
 
-        CD3DX12_ROOT_PARAMETER1 postParams[]{colorSrvParam, normalSrvParam};
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC postRootSignatureDesc;
-        postRootSignatureDesc.Init_1_1(2, postParams, 1, &sampleDesc, D3D12_ROOT_SIGNATURE_FLAG_NONE);
+        postRootSignatureDesc.Init_1_1(1, &srvTableParam, 1, &sampleDesc, D3D12_ROOT_SIGNATURE_FLAG_NONE);
 
         ThrowIfFailed(D3D12SerializeVersionedRootSignature(&postRootSignatureDesc, &signature, &error));
         ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(),
@@ -322,6 +322,8 @@ void MapViewer::LoadAssets() {
         postpsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
         postpsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
         postpsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+        postpsoDesc.DepthStencilState.DepthEnable = false;
+        postpsoDesc.DepthStencilState.StencilEnable = false;
         postpsoDesc.SampleMask = UINT_MAX;
         postpsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         postpsoDesc.NumRenderTargets = 1;
@@ -645,7 +647,6 @@ void MapViewer::PopulateCommandList() {
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     m_commandList->SetGraphicsRootConstantBufferView(0, m_constBuffer->GetGPUVirtualAddress());
-    m_commandList->SetGraphicsRootDescriptorTable(1, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
     m_commandList->RSSetViewports(1, &m_viewport);
     m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
@@ -655,8 +656,8 @@ void MapViewer::PopulateCommandList() {
         D3D12_RESOURCE_STATE_RENDER_TARGET);
     m_commandList->ResourceBarrier(1, &render_barrier);
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex,
-                                            m_rtvDescriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(),
+                                            (FrameCount * 2) + m_frameIndex, m_rtvDescriptorSize);
     CD3DX12_CPU_DESCRIPTOR_HANDLE normalRTV(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(),
                                             FrameCount + m_frameIndex, m_rtvDescriptorSize);
     CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex,
@@ -683,7 +684,13 @@ void MapViewer::PopulateCommandList() {
     // Need to look into a edge detection algorithm
     m_commandList->SetPipelineState(m_postPipelineState.Get());
     m_commandList->SetGraphicsRootSignature(m_postRootSignature.Get());
-    m_commandList->SetGraphicsRootShaderResourceView(0, m_interRTs[m_frameIndex]->GetGPUVirtualAddress());
+    ID3D12DescriptorHeap *ppHeap[]{m_srvHeap.Get()};
+    m_commandList->SetDescriptorHeaps(1, ppHeap);
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtv(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex,
+                                      m_rtvDescriptorSize);
+    m_commandList->OMSetRenderTargets(1, &rtv, FALSE, nullptr);
 
     // m_commandList->DrawInstanced(3, 1, 0, 0);
     m_commandList->SetPipelineState(m_pipelineState.Get());

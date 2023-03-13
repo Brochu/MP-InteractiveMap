@@ -84,7 +84,8 @@ private:
     ComPtr<IDXGISwapChain3> m_swapChain;
     ComPtr<ID3D12Device> m_device;
     ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
-    ComPtr<ID3D12Resource> m_interRTs[FrameCount];
+    ComPtr<ID3D12Resource> m_normalRTs[FrameCount];
+    ComPtr<ID3D12Resource> m_colorRTs[FrameCount];
     ComPtr<ID3D12Resource> m_depthTargets[FrameCount];
     ComPtr<ID3D12CommandAllocator> m_commandAllocators[FrameCount];
     ComPtr<ID3D12CommandQueue> m_commandQueue;
