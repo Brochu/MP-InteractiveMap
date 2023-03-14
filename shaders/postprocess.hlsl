@@ -30,6 +30,6 @@ void VSMain(in uint VertID : SV_VertexID, out float4 Pos : SV_Position, out floa
 }
 
 float4 PSMain(float4 pos : SV_Position, float2 tex : TEXCOORD0) : SV_TARGET {
-    return normalRT.Sample(s, tex);
-    // return float4(0.71, 0.43, 0.30, 1.0);
+    // Need to look into a edge detection algorithm
+    return colorRT.Sample(s, tex);
 }

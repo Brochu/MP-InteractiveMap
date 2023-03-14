@@ -220,10 +220,13 @@ void MapViewer::LoadAssets() {
         NAME_D3D12_OBJECT(m_rootSignature);
 
         // ---------------------------------------------
-        CD3DX12_DESCRIPTOR_RANGE1 srvRange{};
-        srvRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0);
+        CD3DX12_DESCRIPTOR_RANGE1 srvRanges[2]{};
+        srvRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_NONE,
+                          FrameCount * 2);
+        srvRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_NONE,
+                          FrameCount);
         CD3DX12_ROOT_PARAMETER1 srvTableParam;
-        srvTableParam.InitAsDescriptorTable(1, &srvRange, D3D12_SHADER_VISIBILITY_PIXEL);
+        srvTableParam.InitAsDescriptorTable(2, srvRanges, D3D12_SHADER_VISIBILITY_PIXEL);
 
         CD3DX12_STATIC_SAMPLER_DESC sampleDesc;
         sampleDesc.Init(0);
@@ -324,6 +327,7 @@ void MapViewer::LoadAssets() {
         postpsoDesc.VS = CD3DX12_SHADER_BYTECODE(postVertexShader.Get());
         postpsoDesc.PS = CD3DX12_SHADER_BYTECODE(postPixelShader.Get());
         postpsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        postpsoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
         postpsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
         postpsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
         postpsoDesc.DepthStencilState.DepthEnable = false;
@@ -705,8 +709,6 @@ void MapViewer::PopulateCommandList() {
     };
     m_commandList->ResourceBarrier(2, post_barrier);
 
-    // TODO: Implement the wireframe render with a full screen effect
-    // Need to look into a edge detection algorithm
     m_commandList->SetPipelineState(m_postPipelineState.Get());
     m_commandList->SetGraphicsRootSignature(m_postRootSignature.Get());
     ID3D12DescriptorHeap *ppHeap[]{m_srvHeap.Get()};
