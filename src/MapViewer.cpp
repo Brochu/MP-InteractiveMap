@@ -23,6 +23,20 @@
 #include <fstream>
 #include <sstream>
 
+void ShaderCompile(std::wstring path, const char *entry, const char *target, UINT flags,
+                   ComPtr<ID3DBlob> &shader) {
+    ComPtr<ID3DBlob> error;
+    HRESULT hr = D3DCompileFromFile(path.c_str(), nullptr, nullptr, entry, target, flags, 0, &shader, &error);
+
+#if _DEBUG
+    if (!SUCCEEDED(hr)) {
+        auto errorMessage = static_cast<unsigned char *>(error->GetBufferPointer());
+        printf("[SHADER][ERROR] %s\n", errorMessage);
+    }
+#endif
+    ThrowIfFailed(hr);
+}
+
 MapViewer::MapViewer(UINT width, UINT height, std::wstring name)
     : DXSample(width, height, name), m_frameIndex(0), m_width(width), m_height(height),
       m_viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)),
@@ -228,6 +242,9 @@ void MapViewer::LoadAssets() {
         CD3DX12_ROOT_PARAMETER1 srvTableParam;
         srvTableParam.InitAsDescriptorTable(2, srvRanges, D3D12_SHADER_VISIBILITY_PIXEL);
 
+        CD3DX12_ROOT_PARAMETER1 cbvParam;
+        cbvParam.InitAsConstants(4, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+
         CD3DX12_STATIC_SAMPLER_DESC sampleDesc;
         sampleDesc.Init(0);
 
@@ -276,16 +293,14 @@ void MapViewer::LoadAssets() {
         UINT compileFlags = 0;
 #endif
 
-        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/basepass.hlsl").c_str(), nullptr, nullptr,
-                                         "VSMain", "vs_5_1", compileFlags, 0, &vertexShader, nullptr));
-        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/basepass.hlsl").c_str(), nullptr, nullptr,
-                                         "PSMain", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
-        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/postprocess.hlsl").c_str(), nullptr,
-                                         nullptr, "VSMain", "vs_5_1", compileFlags, 0, &postVertexShader,
-                                         nullptr));
-        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders/postprocess.hlsl").c_str(), nullptr,
-                                         nullptr, "PSMain", "ps_5_1", compileFlags, 0, &postPixelShader,
-                                         nullptr));
+        ShaderCompile(GetAssetFullPath(L"shaders/basepass.hlsl"), "VSMain", "vs_5_1", compileFlags,
+                      vertexShader);
+        ShaderCompile(GetAssetFullPath(L"shaders/basepass.hlsl"), "PSMain", "ps_5_1", compileFlags,
+                      pixelShader);
+        ShaderCompile(GetAssetFullPath(L"shaders/post.hlsl"), "VSMain", "vs_5_1", compileFlags,
+                      postVertexShader);
+        ShaderCompile(GetAssetFullPath(L"shaders/post.hlsl"), "PSMain", "ps_5_1", compileFlags,
+                      postPixelShader);
 
         // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
@@ -714,6 +729,8 @@ void MapViewer::PopulateCommandList() {
     ID3D12DescriptorHeap *ppHeap[]{m_srvHeap.Get()};
     m_commandList->SetDescriptorHeaps(1, ppHeap);
     m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
+    m_commandList->SetGraphicsRoot32BitConstant(1, 0, 0);
+    m_commandList->SetGraphicsRoot32BitConstant(1, 1, 1);
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtv(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex,
                                       m_rtvDescriptorSize);

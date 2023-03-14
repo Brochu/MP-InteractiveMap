@@ -14,14 +14,18 @@
 // intent is to output an over-sized triangle that encompasses the entire
 // screen.  By doing so, we avoid rasterization inefficiency that could
 // result from drawing two triangles with a shared edge.
-//
-// Use null input layout
-// Draw(3)
 
-// TODO: Bind srvs for intermediate RTs
 Texture2D colorRT : register(t0);
 Texture2D normalRT : register(t1);
+
 SamplerState s : register(s0);
+
+// cbuffer PerDraw : register(c0) {
+//     uint test0;
+//     uint test1;
+//     uint test2;
+//     uint test3;
+// }
 
 void VSMain(in uint VertID : SV_VertexID, out float4 Pos : SV_Position, out float2 Tex : TexCoord0) {
     // Texture coordinates range [0, 2], but only [0, 1] appears on screen.
@@ -32,4 +36,5 @@ void VSMain(in uint VertID : SV_VertexID, out float4 Pos : SV_Position, out floa
 float4 PSMain(float4 pos : SV_Position, float2 tex : TEXCOORD0) : SV_TARGET {
     // Need to look into a edge detection algorithm
     return colorRT.Sample(s, tex);
+    // return test0;
 }

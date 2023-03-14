@@ -34,7 +34,7 @@ PSInput VSMain(float4 position : POSITION, float4 normal : NORMAL) {
 }
 
 PSOutput PSMain(PSInput input) {
-    float3 norm = input.normal;
+    float3 norm = input.normal.xyz;
 
     PSOutput output;
     output.color = float4(0.61, 0.33, 0.0, 0.75);
