@@ -243,13 +243,14 @@ void MapViewer::LoadAssets() {
         srvTableParam.InitAsDescriptorTable(2, srvRanges, D3D12_SHADER_VISIBILITY_PIXEL);
 
         CD3DX12_ROOT_PARAMETER1 cbvParam;
-        cbvParam.InitAsConstants(4, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+        cbvParam.InitAsConstants(2, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
 
         CD3DX12_STATIC_SAMPLER_DESC sampleDesc;
         sampleDesc.Init(0);
 
+        CD3DX12_ROOT_PARAMETER1 params[]{srvTableParam, cbvParam};
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC postRootSignatureDesc;
-        postRootSignatureDesc.Init_1_1(1, &srvTableParam, 1, &sampleDesc, D3D12_ROOT_SIGNATURE_FLAG_NONE);
+        postRootSignatureDesc.Init_1_1(2, params, 1, &sampleDesc, D3D12_ROOT_SIGNATURE_FLAG_NONE);
 
         ComPtr<ID3DBlob> postSignature;
         ComPtr<ID3DBlob> postError;
@@ -729,8 +730,8 @@ void MapViewer::PopulateCommandList() {
     ID3D12DescriptorHeap *ppHeap[]{m_srvHeap.Get()};
     m_commandList->SetDescriptorHeaps(1, ppHeap);
     m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
-    m_commandList->SetGraphicsRoot32BitConstant(1, 0, 0);
-    m_commandList->SetGraphicsRoot32BitConstant(1, 1, 1);
+    m_commandList->SetGraphicsRoot32BitConstant(1, m_width, 0);
+    m_commandList->SetGraphicsRoot32BitConstant(1, m_height, 1);
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtv(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex,
                                       m_rtvDescriptorSize);
