@@ -260,6 +260,24 @@ void MapViewer::LoadAssets() {
                                                     postSignature->GetBufferSize(),
                                                     IID_PPV_ARGS(&m_postRootSignature)));
         NAME_D3D12_OBJECT(m_postRootSignature);
+
+        // ---------------------------------------------
+        CD3DX12_DESCRIPTOR_RANGE1 srvRange;
+        srvRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0);
+        CD3DX12_ROOT_PARAMETER1 srvIconTable;
+        srvIconTable.InitAsDescriptorTable(1, &srvRange, D3D12_SHADER_VISIBILITY_PIXEL);
+
+        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC overRootSignatureDesc;
+        overRootSignatureDesc.Init_1_1(1, &srvIconTable, 1, &sampleDesc, D3D12_ROOT_SIGNATURE_FLAG_NONE);
+
+        ComPtr<ID3DBlob> overSignature;
+        ComPtr<ID3DBlob> overError;
+        ThrowIfFailed(
+            D3D12SerializeVersionedRootSignature(&overRootSignatureDesc, &overSignature, &overError));
+        ThrowIfFailed(m_device->CreateRootSignature(0, overSignature->GetBufferPointer(),
+                                                    overSignature->GetBufferSize(),
+                                                    IID_PPV_ARGS(&m_overRootSignature)));
+        NAME_D3D12_OBJECT(m_overRootSignature);
     }
 
     // Create Constant Buffer for per-frame data
