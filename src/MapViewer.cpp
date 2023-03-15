@@ -375,6 +375,9 @@ void MapViewer::LoadAssets() {
         ThrowIfFailed(
             m_device->CreateGraphicsPipelineState(&postpsoDesc, IID_PPV_ARGS(&m_postPipelineState)));
         NAME_D3D12_OBJECT(m_postPipelineState);
+
+        // TODO: Add a new pso for the icons overlay rendering
+        // Look into instance rendering
     }
 
     // Create the command list.
@@ -470,6 +473,7 @@ void MapViewer::LoadAssets() {
         m_commandList->CopyBufferRegion(m_vertexBuffer.Get(), 0, m_uploadBuffer.Get(), 0, vertexBufferSize);
         m_commandList->CopyBufferRegion(m_indexBuffer.Get(), 0, m_uploadBuffer.Get(), vertexBufferSize,
                                         indexBufferSize);
+        // TODO: How to handle icons overlay meshes, use instances to render all icons in one draw
 
         const CD3DX12_RESOURCE_BARRIER barriers[2] = {
             CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
@@ -756,6 +760,9 @@ void MapViewer::PopulateCommandList() {
     m_commandList->OMSetRenderTargets(1, &rtv, FALSE, nullptr);
 
     m_commandList->DrawInstanced(3, 1, 0, 0);
+
+    // TODO: Add a new instanced draw to handle icons overlay here
+    // Render icons on top of the final render target
 
     // Indicate that the back buffer will now be used to present.
     D3D12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
