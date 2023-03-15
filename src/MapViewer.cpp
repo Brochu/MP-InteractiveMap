@@ -645,9 +645,9 @@ void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool c
 
     if (RButton && !ctrl) {
         m_xt -= (m_mx - x);
-        m_yt += (m_my - y);
-    } else if (RButton) {
         m_zt -= (m_my - y);
+    } else if (RButton) {
+        m_yt += (m_my - y);
     }
 
     m_mx = x;

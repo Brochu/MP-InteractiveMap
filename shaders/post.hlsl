@@ -38,14 +38,14 @@ float intensity(float3 color) {
 // Src: https://www.shadertoy.com/view/Xdf3Rf
 float4 sobel(float stepx, float stepy, float2 center) {
     // get samples around pixel
-    float tleft = intensity(colorRT.Sample(s, center + float2(-stepx, stepy)).xyz);
-    float left = intensity(colorRT.Sample(s, center + float2(-stepx, 0)).xyz);
-    float bleft = intensity(colorRT.Sample(s, center + float2(-stepx, -stepy)).xyz);
-    float top = intensity(colorRT.Sample(s, center + float2(0, stepy)).xyz);
-    float bottom = intensity(colorRT.Sample(s, center + float2(0, -stepy)).xyz);
-    float tright = intensity(colorRT.Sample(s, center + float2(stepx, stepy)).xyz);
-    float right = intensity(colorRT.Sample(s, center + float2(stepx, 0)).xyz);
-    float bright = intensity(colorRT.Sample(s, center + float2(stepx, -stepy)).xyz);
+    float tleft = intensity(normalRT.Sample(s, center + float2(-stepx, stepy)).xyz);
+    float left = intensity(normalRT.Sample(s, center + float2(-stepx, 0)).xyz);
+    float bleft = intensity(normalRT.Sample(s, center + float2(-stepx, -stepy)).xyz);
+    float top = intensity(normalRT.Sample(s, center + float2(0, stepy)).xyz);
+    float bottom = intensity(normalRT.Sample(s, center + float2(0, -stepy)).xyz);
+    float tright = intensity(normalRT.Sample(s, center + float2(stepx, stepy)).xyz);
+    float right = intensity(normalRT.Sample(s, center + float2(stepx, 0)).xyz);
+    float bright = intensity(normalRT.Sample(s, center + float2(stepx, -stepy)).xyz);
 
     // Sobel masks (see http://en.wikipedia.org/wiki/Sobel_operator)
     //        1 0 -1     -1 -2 -1
@@ -64,7 +64,7 @@ float4 sobel(float stepx, float stepy, float2 center) {
 }
 
 float4 PSMain(float4 pos : SV_Position, float2 tex : TEXCOORD0) : SV_TARGET {
-    float step = 0.15;
+    float step = 0.10;
     float dx = step / screenWidth;
     float dy = step / screenHeight;
 
