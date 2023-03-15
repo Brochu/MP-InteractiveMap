@@ -304,6 +304,8 @@ void MapViewer::LoadAssets() {
         ComPtr<ID3DBlob> pixelShader;
         ComPtr<ID3DBlob> postVertexShader;
         ComPtr<ID3DBlob> postPixelShader;
+        ComPtr<ID3DBlob> iconVertexShader;
+        ComPtr<ID3DBlob> iconPixelShader;
 
 #if defined(_DEBUG)
         // Enable better shader debugging with the graphics debugging tools.
@@ -320,6 +322,10 @@ void MapViewer::LoadAssets() {
                       postVertexShader);
         ShaderCompile(GetAssetFullPath(L"shaders/post.hlsl"), "PSMain", "ps_5_1", compileFlags,
                       postPixelShader);
+        ShaderCompile(GetAssetFullPath(L"shaders/overlay.hlsl"), "VSMain", "vs_5_1", compileFlags,
+                      iconVertexShader);
+        ShaderCompile(GetAssetFullPath(L"shaders/overlay.hlsl"), "PSMain", "ps_5_1", compileFlags,
+                      iconPixelShader);
 
         // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
@@ -378,6 +384,13 @@ void MapViewer::LoadAssets() {
 
         // TODO: Add a new pso for the icons overlay rendering
         // Look into instance rendering
+        D3D12_INPUT_ELEMENT_DESC iconElementDescs[] = {
+            {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+             0},
+            {"TEXCOORD", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA,
+             0},
+            {"TEXCOORD", 1, DXGI_FORMAT_R8_UINT, 1, 12, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 0},
+        };
     }
 
     // Create the command list.
