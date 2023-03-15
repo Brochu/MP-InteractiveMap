@@ -31,7 +31,6 @@ void VSMain(in uint VertID : SV_VertexID, out float4 Pos : SV_Position, out floa
     Pos = float4(lerp(float2(-1, 1), float2(1, -1), Tex), 0, 1);
 }
 
-float step = 1.0;
 float intensity(float3 color) {
     return sqrt((color.x * color.x) + (color.y * color.y) + (color.z * color.z));
 }
@@ -65,9 +64,9 @@ float4 sobel(float stepx, float stepy, float2 center) {
 }
 
 float4 PSMain(float4 pos : SV_Position, float2 tex : TEXCOORD0) : SV_TARGET {
-    // Need to look into a edge detection algorithm
-    float dx = 1.0 / screenWidth;
-    float dy = 1.0 / screenHeight;
+    float step = 0.15;
+    float dx = step / screenWidth;
+    float dy = step / screenHeight;
 
     float4 albedo = colorRT.Sample(s, tex);
     return sobel(dx, dy, tex) + albedo;
