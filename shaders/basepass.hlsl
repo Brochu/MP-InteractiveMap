@@ -28,7 +28,7 @@ PSInput VSMain(float4 position : POSITION, float4 normal : NORMAL) {
     PSInput result;
 
     result.position = mul(mvp, position);
-    result.normal = normal;
+    result.normal = mul(mvp, normal);
 
     return result;
 }
