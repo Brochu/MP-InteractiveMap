@@ -542,7 +542,7 @@ void MapViewer::LoadAssets() {
             m_iconDraws[i].instanceStart = iconTypes.size();
 
             for (int j = 0; j < icons.size(); j++) {
-                // TODO: Fill the icon geometry data for the current world
+                iconGeometry.emplace_back();
                 iconTypes.emplace_back(icons[j].type);
             }
         }
@@ -655,6 +655,9 @@ void MapViewer::OnUpdate() {
     ThrowIfFailed(m_constBuffer->Map(0, &readRange, reinterpret_cast<void **>(&p)));
     memcpy(p, &cb, sizeof(cb));
     m_constBuffer->Unmap(0, nullptr);
+
+    // -----------------------------------------
+    // TODO: Update icon vertices and uvs based on view matrix
 }
 
 // Render the scene.
