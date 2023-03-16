@@ -67,6 +67,13 @@ private:
         size_t drawCount;
     };
 
+    struct IconDraw {
+        size_t vertexStart;
+        size_t instanceStart;
+        size_t vertexCount;
+        size_t instanceCount;
+    };
+
     struct ConstantBuffer {
         XMMATRIX mvp;
         XMMATRIX world;
@@ -122,7 +129,7 @@ private:
 
     UINT m_width = 0;
     UINT m_height = 0;
-    UINT m_mapIndex = 0;
+    UINT m_mapIndex = 1;
     UINT m_mx = 0;
     UINT m_my = 0;
 
@@ -137,7 +144,7 @@ private:
     float m_fov = 45.0;
 
     std::array<Draws, WorldCount> m_worldDraws;
-    std::array<std::vector<ItemMetadata>, WorldCount> m_worldItems;
+    std::array<IconDraw, WorldCount> m_iconDraws;
 
     void LoadPipeline();
     void LoadAssets();

@@ -486,6 +486,7 @@ void MapViewer::LoadAssets() {
         m_commandList->CopyBufferRegion(m_vertexBuffer.Get(), 0, m_uploadBuffer.Get(), 0, vertexBufferSize);
         m_commandList->CopyBufferRegion(m_indexBuffer.Get(), 0, m_uploadBuffer.Get(), vertexBufferSize,
                                         indexBufferSize);
+
         // TODO: How to handle icons overlay meshes, use instances to render all icons in one draw
 
         const CD3DX12_RESOURCE_BARRIER barriers[2] = {
@@ -499,9 +500,11 @@ void MapViewer::LoadAssets() {
 
     // Load map metadata for icons overlay
     {
+        std::array<std::vector<ItemMetadata>, WorldCount> worldItems; // Meta data for future features?
+
         static const std::array<std::string, 2> metafiles{"energytanks.data", "missiles.data"};
-        for (auto &file : metafiles) {
-            std::ifstream f(std::format("data/{}", file).c_str());
+        for (int i = 0; i < metafiles.size(); i++) {
+            std::ifstream f(std::format("data/{}", metafiles[i]).c_str());
             std::string line;
 
             while (std::getline(f, line)) {
@@ -521,7 +524,27 @@ void MapViewer::LoadAssets() {
                 ss.ignore(2);
                 ss >> z;
 
-                m_worldItems[worldIndex - 1].push_back({worldIndex, roomIndex, {x, y, z}});
+                worldItems[worldIndex - 1].push_back({worldIndex, roomIndex, {x, y, z}});
+            }
+        }
+
+        struct InstanceBufferEntry {
+            float worldOffset[3];
+            unsigned char itemType;
+        };
+        std::vector<InstanceBufferEntry> instanceData;
+        m_iconDraws = {};
+
+        for (int i = 0; i < WorldCount; i++) {
+            std::vector<ItemMetadata> &icons = worldItems[i];
+
+            m_iconDraws[i].vertexStart = 0; // Unless we want different models for different icons, always 0
+            m_iconDraws[i].vertexCount = 4; // Idem as vertexStart
+            m_iconDraws[i].instanceStart = instanceData.size();
+            m_iconDraws[i].instanceCount = icons.size();
+
+            for (int j = 0; j < icons.size(); j++) {
+                // TODO: Fill the instance data for the current world
             }
         }
     }
