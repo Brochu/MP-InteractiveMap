@@ -78,6 +78,7 @@ private:
     };
 
     struct ItemMetadata {
+        char type;
         UINT worldIndex;
         UINT roomIndex;
         XMVECTOR position;

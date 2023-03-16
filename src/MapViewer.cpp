@@ -501,53 +501,54 @@ void MapViewer::LoadAssets() {
     // Load map metadata for icons overlay
     {
         std::array<std::vector<ItemMetadata>, WorldCount> worldItems; // Meta data for future features?
+        std::ifstream f("data/items.data");
+        std::string line;
 
-        static const std::array<std::string, 2> metafiles{"energytanks.data", "missiles.data"};
-        for (int i = 0; i < metafiles.size(); i++) {
-            std::ifstream f(std::format("data/{}", metafiles[i]).c_str());
-            std::string line;
+        while (std::getline(f, line)) {
+            std::stringstream ss(line);
+            char itemType = 0;
+            ss >> itemType;
+            ss.ignore();
+            UINT worldIndex = 0;
+            ss >> worldIndex;
+            ss.ignore();
+            UINT roomIndex = 0;
+            ss >> roomIndex;
 
-            while (std::getline(f, line)) {
-                std::stringstream ss(line);
-                UINT worldIndex = 0;
-                ss >> worldIndex;
-                ss.ignore();
-                UINT roomIndex = 0;
-                ss >> roomIndex;
+            ss.ignore();
 
-                ss.ignore();
+            float x, y, z;
+            ss >> x;
+            ss.ignore(2);
+            ss >> y;
+            ss.ignore(2);
+            ss >> z;
 
-                float x, y, z;
-                ss >> x;
-                ss.ignore(2);
-                ss >> y;
-                ss.ignore(2);
-                ss >> z;
-
-                worldItems[worldIndex - 1].push_back({worldIndex, roomIndex, {x, y, z}});
-            }
+            worldItems[worldIndex - 1].push_back({itemType, worldIndex, roomIndex, {x, y, z}});
         }
 
         struct IconGeometry {
             XMVECTOR pos[6];
-            XMVECTOR uvs[6]; // X, Y = uvs; Z = type
+            XMVECTOR uvs[6]; // X, Y = uvs
         };
         std::vector<IconGeometry> iconGeometry;
+        std::vector<char> iconTypes;
         m_iconDraws = {};
 
         for (int i = 0; i < WorldCount; i++) {
             std::vector<ItemMetadata> &icons = worldItems[i];
 
             m_iconDraws[i].instanceCount = icons.size();
-            m_iconDraws[i].instanceStart = iconGeometry.size();
+            m_iconDraws[i].instanceStart = iconTypes.size();
 
             for (int j = 0; j < icons.size(); j++) {
                 // TODO: Fill the icon geometry data for the current world
-                //
+                iconTypes.emplace_back(icons[j].type);
             }
         }
 
         // TODO: Upload iconGeometry to vram as Buffer with SRV for binding as a structured buffer
+        // TODO: Upload iconTypes to vram as Buffer with SRV for binding as a structured buffer
     }
 
     // Load icons used for items overlay
