@@ -528,25 +528,26 @@ void MapViewer::LoadAssets() {
             }
         }
 
-        struct InstanceBufferEntry {
-            float worldOffset[3];
-            unsigned char itemType;
+        struct IconGeometry {
+            XMVECTOR pos[6];
+            XMVECTOR uvs[6]; // X, Y = uvs; Z = type
         };
-        std::vector<InstanceBufferEntry> instanceData;
+        std::vector<IconGeometry> iconGeometry;
         m_iconDraws = {};
 
         for (int i = 0; i < WorldCount; i++) {
             std::vector<ItemMetadata> &icons = worldItems[i];
 
-            m_iconDraws[i].vertexStart = 0; // Unless we want different models for different icons, always 0
-            m_iconDraws[i].vertexCount = 4; // Idem as vertexStart
-            m_iconDraws[i].instanceStart = instanceData.size();
             m_iconDraws[i].instanceCount = icons.size();
+            m_iconDraws[i].instanceStart = iconGeometry.size();
 
             for (int j = 0; j < icons.size(); j++) {
-                // TODO: Fill the instance data for the current world
+                // TODO: Fill the icon geometry data for the current world
+                //
             }
         }
+
+        // TODO: Upload iconGeometry to vram as Buffer with SRV for binding as a structured buffer
     }
 
     // Load icons used for items overlay

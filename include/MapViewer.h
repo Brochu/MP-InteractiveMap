@@ -68,10 +68,8 @@ private:
     };
 
     struct IconDraw {
-        size_t vertexStart;
-        size_t instanceStart;
-        size_t vertexCount;
         size_t instanceCount;
+        size_t instanceStart;
     };
 
     struct ConstantBuffer {
