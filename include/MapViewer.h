@@ -146,6 +146,7 @@ private:
     float m_fov = 45.0;
 
     std::array<Draws, WorldCount> m_worldDraws;
+    std::array<std::vector<ItemMetadata>, WorldCount> m_worldItems;
     std::array<IconDraw, WorldCount> m_iconDraws;
 
     void LoadPipeline();

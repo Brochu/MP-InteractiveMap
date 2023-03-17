@@ -508,7 +508,6 @@ void MapViewer::LoadAssets() {
 
     // Load map metadata for icons overlay
     {
-        std::array<std::vector<ItemMetadata>, WorldCount> worldItems; // Meta data for future features?
         std::ifstream f("data/items.data");
         std::string line;
 
@@ -532,7 +531,7 @@ void MapViewer::LoadAssets() {
             ss.ignore(2);
             ss >> z;
 
-            worldItems[worldIndex - 1].push_back({itemType, worldIndex, roomIndex, {x, y, z}});
+            m_worldItems[worldIndex - 1].push_back({itemType, worldIndex, roomIndex, {x, y, z}});
         }
 
         struct IconGeometry {
@@ -544,7 +543,7 @@ void MapViewer::LoadAssets() {
         m_iconDraws = {};
 
         for (int i = 0; i < WorldCount; i++) {
-            std::vector<ItemMetadata> &icons = worldItems[i];
+            std::vector<ItemMetadata> &icons = m_worldItems[i];
 
             m_iconDraws[i].instanceCount = icons.size();
             m_iconDraws[i].instanceStart = iconTypes.size();
@@ -690,6 +689,13 @@ void MapViewer::OnUpdate() {
 
     // -----------------------------------------
     // TODO: Update icon vertices and uvs based on view matrix
+    for (int i = 0; i < WorldCount; i++) {
+        auto &items = m_worldItems[i];
+
+        for (int j = 0; j < items.size(); j++) {
+            // TODO: Update vertices for all items based on camera position and look vector
+        }
+    }
 }
 
 // Render the scene.
@@ -836,6 +842,9 @@ void MapViewer::PopulateCommandList() {
 
     // TODO: Add a new instanced draw to handle icons overlay here
     // Render icons on top of the final render target
+    m_commandList->SetGraphicsRootSignature(m_overRootSignature.Get());
+    m_commandList->SetDescriptorHeaps(1, ppHeap);
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
     m_commandList->SetGraphicsRootShaderResourceView(1, m_iconVertices->GetGPUVirtualAddress());
     m_commandList->SetGraphicsRootShaderResourceView(2, m_iconTypes->GetGPUVirtualAddress());
 
