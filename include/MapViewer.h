@@ -78,7 +78,7 @@ private:
     };
 
     struct ItemMetadata {
-        char type;
+        unsigned char type;
         UINT worldIndex;
         UINT roomIndex;
         XMVECTOR position;
@@ -119,6 +119,9 @@ private:
 
     ComPtr<ID3D12Resource> m_imgUploadBuffer[2];
     ComPtr<ID3D12Resource> m_img[2];
+
+    ComPtr<ID3D12Resource> m_iconVertices;
+    ComPtr<ID3D12Resource> m_iconTypes;
 
     // Synchronization objects.
     UINT m_frameIndex;

@@ -506,7 +506,7 @@ void MapViewer::LoadAssets() {
 
         while (std::getline(f, line)) {
             std::stringstream ss(line);
-            char itemType = 0;
+            unsigned char itemType = 0;
             ss >> itemType;
             ss.ignore();
             UINT worldIndex = 0;
@@ -532,7 +532,7 @@ void MapViewer::LoadAssets() {
             XMVECTOR uvs[6]; // X, Y = uvs
         };
         std::vector<IconGeometry> iconGeometry;
-        std::vector<char> iconTypes;
+        std::vector<unsigned char> iconTypes;
         m_iconDraws = {};
 
         for (int i = 0; i < WorldCount; i++) {
@@ -547,8 +547,32 @@ void MapViewer::LoadAssets() {
             }
         }
 
-        // TODO: Upload iconGeometry to vram as Buffer with SRV for binding as a structured buffer
-        // TODO: Upload iconTypes to vram as Buffer with SRV for binding as a structured buffer
+        const UINT geometrySize = sizeof(IconGeometry) * (UINT)iconGeometry.size();
+        const UINT iconTypeSize = sizeof(char) * (UINT)iconTypes.size();
+
+        D3D12_HEAP_PROPERTIES uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+        D3D12_RESOURCE_DESC iconBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(geometrySize);
+        D3D12_RESOURCE_DESC typesBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(iconTypeSize);
+
+        ThrowIfFailed(m_device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE,
+                                                        &iconBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+                                                        nullptr, IID_PPV_ARGS(&m_iconVertices)));
+        NAME_D3D12_OBJECT(m_iconVertices);
+        ThrowIfFailed(m_device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE,
+                                                        &typesBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ,
+                                                        nullptr, IID_PPV_ARGS(&m_iconTypes)));
+        NAME_D3D12_OBJECT(m_iconTypes);
+
+        CD3DX12_RANGE readRange(0, 0); // We do not intend to read from these resources on the CPU.
+        unsigned char *pGeoUpload;
+        ThrowIfFailed(m_iconVertices->Map(0, &readRange, (void **)&pGeoUpload));
+        memcpy(pGeoUpload, iconGeometry.data(), geometrySize);
+        m_iconVertices->Unmap(0, nullptr);
+
+        unsigned char *pTypesUpload;
+        ThrowIfFailed(m_iconTypes->Map(0, &readRange, (void **)&pTypesUpload));
+        memcpy(pTypesUpload, iconTypes.data(), iconTypeSize);
+        m_iconTypes->Unmap(0, nullptr);
     }
 
     // Load icons used for items overlay
