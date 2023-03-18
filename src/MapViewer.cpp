@@ -506,8 +506,6 @@ void MapViewer::LoadAssets() {
         m_commandList->CopyBufferRegion(m_indexBuffer.Get(), 0, m_uploadBuffer.Get(), vertexBufferSize,
                                         indexBufferSize);
 
-        // TODO: How to handle icons overlay meshes, use instances to render all icons in one draw
-
         const CD3DX12_RESOURCE_BARRIER barriers[2] = {
             CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
                                                  D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER),
@@ -708,6 +706,18 @@ void MapViewer::OnUpdate() {
 
         for (int j = 0; j < items.size(); j++) {
             // TODO: Update vertices for all items based on camera position and look vector
+            // We need to convert this logic to use DxMath + Dx12
+            // D3DMATRIX mat;
+            // lpDevice->GetTransform(D3DTRANSFORMSTATE_VIEW,&mat);
+            // D3DVECTOR rightVect=Normalize(D3DVECTOR(mat._11,mat._21,mat._31))*size*0.5f;
+            // D3DVECTOR upVect=Normalize(D3DVECTOR(mat._12,mat._22,mat._32))*size*0.5f;
+
+            // verts[0]=D3DLVERTEX(loc-rightVect, color, 0, 0.0f, 0.0f);
+            // verts[1]=D3DLVERTEX(loc+upVect, color, 0, 0.0f, 1.0f);
+            // verts[2]=D3DLVERTEX(loc-upVect, color, 0, 1.0f, 0.0f);
+            // verts[3]=D3DLVERTEX(loc+rightVect, color, 0, 1.0f, 1.0f);
+            //  Except for our case, we will generate the full 6 vertices with duplicates
+            //  to avoid using index buffers for first version, see to add index buffer later
         }
     }
 }
