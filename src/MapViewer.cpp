@@ -390,15 +390,26 @@ void MapViewer::LoadAssets() {
             m_device->CreateGraphicsPipelineState(&postpsoDesc, IID_PPV_ARGS(&m_postPipelineState)));
         NAME_D3D12_OBJECT(m_postPipelineState);
 
-        // TODO: Add a new pso for the icons overlay rendering
-        // Look into instance rendering
-        D3D12_INPUT_ELEMENT_DESC iconElementDescs[] = {
-            {"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-             0},
-            {"TEXCOORD", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA,
-             0},
-            {"TEXCOORD", 1, DXGI_FORMAT_R8_UINT, 1, 12, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 0},
-        };
+        // Overlay pass PSO creation
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC overpsoDesc{};
+        overpsoDesc.InputLayout = {nullptr, 0};
+        overpsoDesc.pRootSignature = m_overRootSignature.Get();
+        overpsoDesc.VS = CD3DX12_SHADER_BYTECODE(iconVertexShader.Get());
+        overpsoDesc.PS = CD3DX12_SHADER_BYTECODE(iconPixelShader.Get());
+        overpsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        overpsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        overpsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+        overpsoDesc.DepthStencilState.DepthEnable = false;
+        overpsoDesc.DepthStencilState.StencilEnable = false;
+        overpsoDesc.SampleMask = UINT_MAX;
+        overpsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        overpsoDesc.NumRenderTargets = 1;
+        overpsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        overpsoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
+        overpsoDesc.SampleDesc.Count = 1;
+        ThrowIfFailed(
+            m_device->CreateGraphicsPipelineState(&overpsoDesc, IID_PPV_ARGS(&m_overPipelineState)));
+        NAME_D3D12_OBJECT(m_overPipelineState);
     }
 
     // Create the command list.
@@ -576,6 +587,7 @@ void MapViewer::LoadAssets() {
         memcpy(pGeoUpload, iconGeometry.data(), geometrySize);
         m_iconVertices->Unmap(0, nullptr);
 
+        // TODO: This buffer should not change and could be copied to default heap
         unsigned char *pTypesUpload;
         ThrowIfFailed(m_iconTypes->Map(0, &readRange, (void **)&pTypesUpload));
         memcpy(pTypesUpload, iconTypes.data(), iconTypeSize);
@@ -688,6 +700,8 @@ void MapViewer::OnUpdate() {
     m_constBuffer->Unmap(0, nullptr);
 
     // -----------------------------------------
+    // TODO: Convert this process to a compute shader
+    // Maybe also look into setting up the overlay pass as an indirect draw
     // TODO: Update icon vertices and uvs based on view matrix
     for (int i = 0; i < WorldCount; i++) {
         auto &items = m_worldItems[i];
