@@ -60,6 +60,11 @@ private:
         XMFLOAT4 normal;
     };
 
+    struct IconGeometry {
+        XMVECTOR pos[6];
+        XMVECTOR uvs[6]; // X, Y = uvs
+    };
+
     struct Draws {
         std::vector<size_t> indexStarts;
         std::vector<size_t> vertexStarts;

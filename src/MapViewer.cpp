@@ -543,10 +543,6 @@ void MapViewer::LoadAssets() {
             m_worldItems[worldIndex - 1].push_back({itemType, worldIndex, roomIndex, {x, y, z}});
         }
 
-        struct IconGeometry {
-            XMVECTOR pos[6];
-            XMVECTOR uvs[6]; // X, Y = uvs
-        };
         std::vector<IconGeometry> iconGeometry;
         std::vector<unsigned char> iconTypes;
         m_iconDraws = {};
