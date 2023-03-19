@@ -693,29 +693,54 @@ void MapViewer::OnUpdate() {
     memcpy(p, &cb, sizeof(cb));
     m_constBuffer->Unmap(0, nullptr);
 
+    std::vector<IconGeometry> iconGeometry;
     // -----------------------------------------
     // TODO: Convert this process to a compute shader
     // Maybe also look into setting up the overlay pass as an indirect draw
-    // TODO: Update icon vertices and uvs based on view matrix
     for (int i = 0; i < WorldCount; i++) {
         auto &items = m_worldItems[i];
 
         for (int j = 0; j < items.size(); j++) {
-            // TODO: Update vertices for all items based on camera position and look vector
-            // We need to convert this logic to use DxMath + Dx12
-            // D3DMATRIX mat;
-            // lpDevice->GetTransform(D3DTRANSFORMSTATE_VIEW,&mat);
-            // D3DVECTOR rightVect=Normalize(D3DVECTOR(mat._11,mat._21,mat._31))*size*0.5f;
-            // D3DVECTOR upVect=Normalize(D3DVECTOR(mat._12,mat._22,mat._32))*size*0.5f;
+            auto &item = items[j];
 
-            // verts[0]=D3DLVERTEX(loc-rightVect, color, 0, 0.0f, 0.0f);
-            // verts[1]=D3DLVERTEX(loc+upVect, color, 0, 0.0f, 1.0f);
-            // verts[2]=D3DLVERTEX(loc-upVect, color, 0, 1.0f, 0.0f);
-            // verts[3]=D3DLVERTEX(loc+rightVect, color, 0, 1.0f, 1.0f);
-            //  Except for our case, we will generate the full 6 vertices with duplicates
-            //  to avoid using index buffers for first version, see to add index buffer later
+            XMFLOAT4X4 viewMat{};
+            XMStoreFloat4x4(&viewMat, view);
+
+            auto v_11 = viewMat.m[0][0];
+            auto v_21 = viewMat.m[1][0];
+            auto v_31 = viewMat.m[2][0];
+
+            auto v_12 = viewMat.m[0][1];
+            auto v_22 = viewMat.m[1][1];
+            auto v_32 = viewMat.m[2][1];
+
+            XMVECTOR right{v_11, v_21, v_31};
+            right = XMVector3Normalize(right * (m_iconSize * 0.5f));
+            XMVECTOR up{v_12, v_22, v_32};
+            up = XMVector3Normalize(up * (m_iconSize * 0.5f));
+
+            IconGeometry geo{};
+            geo.pos[0] = item.position - right;
+            geo.uvs[0] = {0.0f, 0.0f};
+            geo.pos[1] = item.position + up;
+            geo.uvs[1] = {0.0f, 1.0f};
+            geo.pos[2] = item.position - up;
+            geo.uvs[2] = {1.0f, 0.0f};
+            geo.pos[3] = item.position + up;
+            geo.uvs[3] = {0.0f, 1.0f};
+            geo.pos[4] = item.position - up;
+            geo.uvs[4] = {1.0f, 0.0f};
+            geo.pos[5] = item.position + right;
+            geo.uvs[5] = {1.0f, 1.0f};
+
+            iconGeometry.push_back(geo);
         }
     }
+
+    unsigned char *geoData;
+    ThrowIfFailed(m_iconVertices->Map(0, &readRange, (void **)&geoData));
+    memcpy(geoData, iconGeometry.data(), sizeof(IconGeometry) * iconGeometry.size());
+    m_iconVertices->Unmap(0, nullptr);
 }
 
 // Render the scene.
