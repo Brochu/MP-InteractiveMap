@@ -887,6 +887,7 @@ void MapViewer::PopulateCommandList() {
 
     // TODO: Add a new instanced draw to handle icons overlay here
     // Render icons on top of the final render target
+    m_commandList->SetPipelineState(m_overPipelineState.Get());
     m_commandList->SetGraphicsRootSignature(m_overRootSignature.Get());
     m_commandList->SetDescriptorHeaps(1, ppHeap);
     m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
