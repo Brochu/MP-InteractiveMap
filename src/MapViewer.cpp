@@ -893,6 +893,10 @@ void MapViewer::PopulateCommandList() {
     m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
     m_commandList->SetGraphicsRootShaderResourceView(1, m_iconVertices->GetGPUVirtualAddress());
     m_commandList->SetGraphicsRootShaderResourceView(2, m_iconTypes->GetGPUVirtualAddress());
+    m_commandList->IASetVertexBuffers(0, 0, nullptr);
+
+    auto iconDraws = m_iconDraws[1]; // Force draw the first RuinsWorld icon
+    m_commandList->DrawInstanced(6, 1, 0, (UINT)iconDraws.instanceStart);
 
     // Indicate that the back buffer will now be used to present.
     D3D12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
