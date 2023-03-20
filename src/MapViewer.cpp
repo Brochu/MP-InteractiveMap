@@ -274,9 +274,12 @@ void MapViewer::LoadAssets() {
         srvIconTypes.InitAsShaderResourceView(3, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE,
                                               D3D12_SHADER_VISIBILITY_VERTEX);
 
-        CD3DX12_ROOT_PARAMETER1 iconParams[]{srvIconTable, srvIconVertices, srvIconTypes};
+        CD3DX12_ROOT_PARAMETER1 cbvConsts;
+        cbvConsts.InitAsConstants(4, 0);
+
+        CD3DX12_ROOT_PARAMETER1 iconParams[]{srvIconTable, srvIconVertices, srvIconTypes, cbvConsts};
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC overRootSignatureDesc;
-        overRootSignatureDesc.Init_1_1(3, iconParams, 1, &sampleDesc, D3D12_ROOT_SIGNATURE_FLAG_NONE);
+        overRootSignatureDesc.Init_1_1(4, iconParams, 1, &sampleDesc, D3D12_ROOT_SIGNATURE_FLAG_NONE);
 
         ComPtr<ID3DBlob> overSignature;
         ComPtr<ID3DBlob> overError;
@@ -896,6 +899,7 @@ void MapViewer::PopulateCommandList() {
     m_commandList->IASetVertexBuffers(0, 0, nullptr);
 
     auto iconDraws = m_iconDraws[1]; // Force draw the first RuinsWorld icon
+    m_commandList->SetGraphicsRoot32BitConstant(3, 1, 0);
     m_commandList->DrawInstanced(6, 1, 0, (UINT)iconDraws.instanceStart);
 
     // Indicate that the back buffer will now be used to present.

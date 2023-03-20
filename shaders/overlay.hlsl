@@ -13,9 +13,10 @@ struct IconVert {
 StructuredBuffer<IconVert> vertexBuffer : register(t2);
 Buffer<uint> typeBuffer : register(t3); // Might need a mask for 8bit values
 
+cbuffer PerDraw : register(b0) { uint instanceOffset; };
+
 struct VSIn {
     uint VertId : SV_VertexID;
-    uint InstId : SV_InstanceID; // The instance id idea doesn't work, need to use a 32bit constant to offset
 };
 
 struct PSIn {
@@ -37,6 +38,7 @@ float4 PSMain(PSIn input) : SV_TARGET {
     // TODO: Use the item type and UVs to sample the right texture for the current icon
     // Maybe look into some effects later on?
     // Will the transparency work here?
-    float4 albedo = float4(0.0, 0.0, 0.0, 0.0);
-    return albedo;
+
+    float4 color = float4(instanceOffset.xxxx);
+    return color;
 }
