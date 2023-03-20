@@ -15,7 +15,7 @@ Buffer<uint> typeBuffer : register(t3); // Might need a mask for 8bit values
 
 struct VSIn {
     uint VertId : SV_VertexID;
-    uint InstId : SV_InstanceID;
+    uint InstId : SV_InstanceID; // The instance id idea doesn't work, need to use a 32bit constant to offset
 };
 
 struct PSIn {
