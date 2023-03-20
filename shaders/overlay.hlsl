@@ -17,6 +17,7 @@ cbuffer PerDraw : register(b0) { uint instanceOffset; };
 
 struct VSIn {
     uint VertId : SV_VertexID;
+    uint InstId : SV_InstanceID;
 };
 
 struct PSIn {
