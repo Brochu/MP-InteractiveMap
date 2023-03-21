@@ -722,6 +722,7 @@ void MapViewer::OnUpdate() {
             XMVECTOR up{v_12, v_22, v_32};
             up = XMVector3Normalize(up * (m_iconSize * 0.5f));
 
+            // TODO: There is an issue here, where the shader expect the formats to be different than they are
             IconGeometry geo{};
             geo.pos[0] = item.position - right;
             geo.uvs[0] = {0.0f, 0.0f};
@@ -737,7 +738,18 @@ void MapViewer::OnUpdate() {
             geo.uvs[5] = {1.0f, 1.0f};
 
             iconGeometry.push_back(geo);
+
+            // Debug vert pos + uvs
+            // XMFLOAT4 v{};
+            // XMStoreFloat4(&v, item.position);
+            // printf("[DEBUG][ICONS] Position = (%f, %f, %f)\n", v.x, v.y, v.z);
+
+            // for (int k = 0; k < 6; k++) {
+            //     XMStoreFloat4(&v, geo.pos[k]);
+            //     printf("\tGenerated pos[%i] = (%f, %f, %f)\n", k, v.x, v.y, v.z);
+            // }
         }
+        // system("pause");
     }
 
     unsigned char *geoData;
@@ -898,9 +910,10 @@ void MapViewer::PopulateCommandList() {
     m_commandList->SetGraphicsRootShaderResourceView(2, m_iconTypes->GetGPUVirtualAddress());
     m_commandList->IASetVertexBuffers(0, 0, nullptr);
 
-    auto iconDraws = m_iconDraws[1]; // Force draw the first RuinsWorld icon
-    m_commandList->SetGraphicsRoot32BitConstant(3, 1, 0);
-    m_commandList->DrawInstanced(6, 1, 0, (UINT)iconDraws.instanceStart);
+    // TODO: Add loop to draw all icons for current area
+    auto iconDraws = m_iconDraws[1];
+    m_commandList->SetGraphicsRoot32BitConstant(3, (UINT)iconDraws.instanceStart, 0);
+    m_commandList->DrawInstanced(6, (UINT)iconDraws.instanceCount, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     D3D12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(

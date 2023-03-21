@@ -28,10 +28,12 @@ struct PSIn {
 PSIn VSMain(VSIn input) {
     // TODO: Implement getting the right vertex data based on InstanceId
     // Get the vertex position and UVs to send to pixel shader
+    uint vertIdx = instanceOffset + input.InstId;
+    IconVert v = vertexBuffer.Load(vertIdx);
 
     PSIn output;
-    output.Pos = float4(0.0, 0.0, 0.0, 1.0);
-    output.Uvs = float2(0.0, 0.0);
+    output.Pos = float4(v.pos[input.VertId], 1.0);
+    output.Uvs = v.uvs[input.VertId];
     return output;
 }
 
