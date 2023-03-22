@@ -702,7 +702,7 @@ void MapViewer::OnUpdate() {
 
     std::vector<IconGeometry> iconGeometry;
     // -----------------------------------------
-    // TODO: Convert this process to a compute shader
+    // IDEA: Convert this process to a compute shader
     // Maybe also look into setting up the overlay pass as an indirect draw
     for (int i = 0; i < WorldCount; i++) {
         auto &items = m_worldItems[i];
@@ -782,7 +782,6 @@ void MapViewer::OnKeyDown(UINT8 key) {
 
 void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool ctrl) {
     if (LButton) {
-        // TODO: Look into a way to avoid gimble locks for rotations, using quats?
         m_ymap += (m_mx - x);
         if (m_ymap > 360)
             m_ymap -= 360;
@@ -794,6 +793,7 @@ void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool c
             m_xmap = 89;
         if (m_xmap < -89)
             m_xmap = -89;
+        // TODO: Find a fix to make the translation moves the map with the current rotation taken into account
     }
 
     if (RButton && !ctrl) {
