@@ -722,34 +722,22 @@ void MapViewer::OnUpdate() {
             XMVECTOR up{v_12, v_22, v_32};
             up = XMVector3Normalize(up * (m_iconSize * 0.5f));
 
-            // TODO: There is an issue here, where the shader expect the formats to be different than they are
             IconGeometry geo{};
-            geo.pos[0] = item.position - right;
+            XMStoreFloat3(&geo.pos[0], item.position - right);
             geo.uvs[0] = {0.0f, 0.0f};
-            geo.pos[1] = item.position + up;
+            XMStoreFloat3(&geo.pos[1], item.position + up);
             geo.uvs[1] = {0.0f, 1.0f};
-            geo.pos[2] = item.position - up;
+            XMStoreFloat3(&geo.pos[2], item.position - up);
             geo.uvs[2] = {1.0f, 0.0f};
-            geo.pos[3] = item.position + up;
+            XMStoreFloat3(&geo.pos[3], item.position + up);
             geo.uvs[3] = {0.0f, 1.0f};
-            geo.pos[4] = item.position - up;
+            XMStoreFloat3(&geo.pos[4], item.position - up);
             geo.uvs[4] = {1.0f, 0.0f};
-            geo.pos[5] = item.position + right;
+            XMStoreFloat3(&geo.pos[5], item.position + right);
             geo.uvs[5] = {1.0f, 1.0f};
 
             iconGeometry.push_back(geo);
-
-            // Debug vert pos + uvs
-            // XMFLOAT4 v{};
-            // XMStoreFloat4(&v, item.position);
-            // printf("[DEBUG][ICONS] Position = (%f, %f, %f)\n", v.x, v.y, v.z);
-
-            // for (int k = 0; k < 6; k++) {
-            //     XMStoreFloat4(&v, geo.pos[k]);
-            //     printf("\tGenerated pos[%i] = (%f, %f, %f)\n", k, v.x, v.y, v.z);
-            // }
         }
-        // system("pause");
     }
 
     unsigned char *geoData;

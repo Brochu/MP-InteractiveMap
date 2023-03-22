@@ -61,8 +61,8 @@ private:
     };
 
     struct IconGeometry {
-        XMVECTOR pos[6];
-        XMVECTOR uvs[6]; // X, Y = uvs
+        XMFLOAT3 pos[6];
+        XMFLOAT2 uvs[6];
     };
 
     struct Draws {
