@@ -34,9 +34,8 @@ PSIn VSMain(VSIn input) {
     uint vertIdx = instanceOffset + input.InstId;
     IconVert v = vertexBuffer.Load(vertIdx);
 
-    // result.position = mul(mvp, position);
     PSIn output;
-    output.Pos = float4(v.pos[input.VertId], 1.0);
+    output.Pos = mul(mvp, float4(v.pos[input.VertId], 1.0));
     output.Uvs = v.uvs[input.VertId];
     output.Type = vertIdx;
     return output;
