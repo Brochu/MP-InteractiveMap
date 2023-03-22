@@ -11,7 +11,7 @@ struct IconVert {
 };
 
 StructuredBuffer<IconVert> vertexBuffer : register(t2);
-Buffer<uint> typeBuffer : register(t3); // Might need a mask for 8bit values
+StructuredBuffer<uint> typeBuffer : register(t3); // Might need a mask for 8bit values
 
 cbuffer PerDraw : register(b0) { uint instanceOffset; };
 
@@ -23,6 +23,7 @@ struct VSIn {
 struct PSIn {
     float4 Pos : SV_Position;
     float2 Uvs : TEXCOORD0;
+    float Type : TEXCOORD1;
 };
 
 PSIn VSMain(VSIn input) {
@@ -34,6 +35,7 @@ PSIn VSMain(VSIn input) {
     PSIn output;
     output.Pos = float4(v.pos[input.VertId], 1.0);
     output.Uvs = v.uvs[input.VertId];
+    output.Type = vertIdx;
     return output;
 }
 
@@ -42,6 +44,15 @@ float4 PSMain(PSIn input) : SV_TARGET {
     // Maybe look into some effects later on?
     // Will the transparency work here?
 
-    float4 color = float4(instanceOffset.xxxx);
-    return color;
+    uint idx = (uint)input.Type;
+    uint t = typeBuffer.Load(idx);
+    float4 albedo;
+
+    if (t == 0) {
+        albedo = energyT.Sample(s, input.Uvs);
+    } else {
+        albedo = missileT.Sample(s, input.Uvs);
+    }
+
+    return float4(1.0, 1.0, 1.0, 0.0);
 }
