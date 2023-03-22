@@ -722,9 +722,9 @@ void MapViewer::OnUpdate() {
             auto v_32 = viewMat.m[2][1];
 
             XMVECTOR right{v_11, v_21, v_31};
-            right = XMVector3Normalize(right * (m_iconSize * 0.5f));
+            right = XMVector3Normalize(right) * m_iconSize * 0.5f;
             XMVECTOR up{v_12, v_22, v_32};
-            up = XMVector3Normalize(up * (m_iconSize * 0.5f));
+            up = XMVector3Normalize(up) * m_iconSize * 0.5f;
 
             IconGeometry geo{};
             XMStoreFloat3(&geo.pos[0], item.position - right);
@@ -733,10 +733,10 @@ void MapViewer::OnUpdate() {
             geo.uvs[1] = {0.0f, 1.0f};
             XMStoreFloat3(&geo.pos[2], item.position - up);
             geo.uvs[2] = {1.0f, 0.0f};
-            XMStoreFloat3(&geo.pos[3], item.position + up);
-            geo.uvs[3] = {0.0f, 1.0f};
-            XMStoreFloat3(&geo.pos[4], item.position - up);
-            geo.uvs[4] = {1.0f, 0.0f};
+            XMStoreFloat3(&geo.pos[3], item.position - up);
+            geo.uvs[3] = {1.0f, 0.0f};
+            XMStoreFloat3(&geo.pos[4], item.position + up);
+            geo.uvs[4] = {0.0f, 1.0f};
             XMStoreFloat3(&geo.pos[5], item.position + right);
             geo.uvs[5] = {1.0f, 1.0f};
 
