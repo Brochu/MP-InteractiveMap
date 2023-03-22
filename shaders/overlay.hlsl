@@ -3,8 +3,6 @@ Texture2D missileT : register(t1);
 
 SamplerState s : register(s0);
 
-// TODO: Need to bind the PerFrame Constant Buffer for mvp matrix
-
 struct IconVert {
     float3 pos[6];
     float2 uvs[6];
@@ -36,6 +34,7 @@ PSIn VSMain(VSIn input) {
     uint vertIdx = instanceOffset + input.InstId;
     IconVert v = vertexBuffer.Load(vertIdx);
 
+    // result.position = mul(mvp, position);
     PSIn output;
     output.Pos = float4(v.pos[input.VertId], 1.0);
     output.Uvs = v.uvs[input.VertId];
