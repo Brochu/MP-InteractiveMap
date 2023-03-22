@@ -56,5 +56,5 @@ float4 PSMain(PSIn input) : SV_TARGET {
         albedo = missileT.Sample(s, input.Uvs);
     }
 
-    return float4(1.0, 1.0, 1.0, 0.0);
+    return missileT.Sample(s, input.Uvs);
 }
