@@ -277,9 +277,13 @@ void MapViewer::LoadAssets() {
         CD3DX12_ROOT_PARAMETER1 cbvConsts;
         cbvConsts.InitAsConstants(4, 0);
 
-        CD3DX12_ROOT_PARAMETER1 iconParams[]{srvIconTable, srvIconVertices, srvIconTypes, cbvConsts};
+        CD3DX12_ROOT_PARAMETER1 cbvPerFrame;
+        cbvPerFrame.InitAsConstantBufferView(1);
+
+        CD3DX12_ROOT_PARAMETER1 iconParams[]{srvIconTable, srvIconVertices, srvIconTypes, cbvConsts,
+                                             cbvPerFrame};
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC overRootSignatureDesc;
-        overRootSignatureDesc.Init_1_1(4, iconParams, 1, &sampleDesc, D3D12_ROOT_SIGNATURE_FLAG_NONE);
+        overRootSignatureDesc.Init_1_1(5, iconParams, 1, &sampleDesc, D3D12_ROOT_SIGNATURE_FLAG_NONE);
 
         ComPtr<ID3DBlob> overSignature;
         ComPtr<ID3DBlob> overError;
@@ -896,6 +900,7 @@ void MapViewer::PopulateCommandList() {
     m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
     m_commandList->SetGraphicsRootShaderResourceView(1, m_iconVertices->GetGPUVirtualAddress());
     m_commandList->SetGraphicsRootShaderResourceView(2, m_iconTypes->GetGPUVirtualAddress());
+    m_commandList->SetGraphicsRootConstantBufferView(4, m_constBuffer->GetGPUVirtualAddress());
     m_commandList->IASetVertexBuffers(0, 0, nullptr);
 
     // TODO: Add loop to draw all icons for current area

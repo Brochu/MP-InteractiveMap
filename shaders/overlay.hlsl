@@ -14,6 +14,10 @@ StructuredBuffer<IconVert> vertexBuffer : register(t2);
 StructuredBuffer<uint> typeBuffer : register(t3); // Might need a mask for 8bit values
 
 cbuffer PerDraw : register(b0) { uint instanceOffset; };
+cbuffer PerFrame : register(b1) {
+    float4x4 mvp;
+    float4x4 world;
+};
 
 struct VSIn {
     uint VertId : SV_VertexID;
