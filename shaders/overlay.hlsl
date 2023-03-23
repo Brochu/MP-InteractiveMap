@@ -46,15 +46,5 @@ float4 PSMain(PSIn input) : SV_TARGET {
     // Maybe look into some effects later on?
     // Will the transparency work here?
 
-    uint idx = (uint)input.Type;
-    uint t = typeBuffer.Load(idx);
-    float4 albedo;
-
-    if (t == 0) {
-        albedo = energyT.Sample(s, input.Uvs);
-    } else {
-        albedo = missileT.Sample(s, input.Uvs);
-    }
-
-    return missileT.Sample(s, input.Uvs);
+    return energyT.Sample(s, input.Uvs);
 }

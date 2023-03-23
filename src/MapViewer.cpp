@@ -728,18 +728,18 @@ void MapViewer::OnUpdate() {
             up = XMVector3Normalize(up) * m_iconSize * 0.5f;
 
             IconGeometry geo{};
-            XMStoreFloat3(&geo.pos[0], item.position - right);
-            geo.uvs[0] = {0.0f, 0.0f};
-            XMStoreFloat3(&geo.pos[1], item.position + up);
-            geo.uvs[1] = {0.0f, 1.0f};
-            XMStoreFloat3(&geo.pos[2], item.position - up);
-            geo.uvs[2] = {1.0f, 0.0f};
-            XMStoreFloat3(&geo.pos[3], item.position - up);
-            geo.uvs[3] = {1.0f, 0.0f};
-            XMStoreFloat3(&geo.pos[4], item.position + up);
-            geo.uvs[4] = {0.0f, 1.0f};
-            XMStoreFloat3(&geo.pos[5], item.position + right);
-            geo.uvs[5] = {1.0f, 1.0f};
+            XMStoreFloat3(&geo.pos[0], item.position - right - up);
+            geo.uvs[0] = {1.0f, 1.0f};
+            XMStoreFloat3(&geo.pos[1], item.position - right + up);
+            geo.uvs[1] = {1.0f, 0.0f};
+            XMStoreFloat3(&geo.pos[2], item.position + right - up);
+            geo.uvs[2] = {0.0f, 1.0f};
+            XMStoreFloat3(&geo.pos[3], item.position + right - up);
+            geo.uvs[3] = {0.0f, 1.0f};
+            XMStoreFloat3(&geo.pos[4], item.position - right + up);
+            geo.uvs[4] = {1.0f, 0.0f};
+            XMStoreFloat3(&geo.pos[5], item.position + right + up);
+            geo.uvs[5] = {0.0f, 0.0f};
 
             iconGeometry.push_back(geo);
         }
