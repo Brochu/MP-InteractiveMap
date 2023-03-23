@@ -905,7 +905,7 @@ void MapViewer::PopulateCommandList() {
     m_commandList->IASetVertexBuffers(0, 0, nullptr);
 
     // TODO: Add loop to draw all icons for current area
-    auto iconDraws = m_iconDraws[1];
+    auto iconDraws = m_iconDraws[m_mapIndex];
     m_commandList->SetGraphicsRoot32BitConstant(3, (UINT)iconDraws.instanceStart, 0);
     m_commandList->DrawInstanced(6, (UINT)iconDraws.instanceCount, 0, 0);
 
