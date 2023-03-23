@@ -100,15 +100,20 @@ private:
     ComPtr<ID3D12Resource> m_depthTargets[FrameCount];
     ComPtr<ID3D12CommandAllocator> m_commandAllocators[FrameCount];
     ComPtr<ID3D12CommandQueue> m_commandQueue;
+
     ComPtr<ID3D12RootSignature> m_rootSignature;
     ComPtr<ID3D12RootSignature> m_postRootSignature;
     ComPtr<ID3D12RootSignature> m_overRootSignature;
+
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
     ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
     ComPtr<ID3D12DescriptorHeap> m_srvHeap;
+    ComPtr<ID3D12DescriptorHeap> m_imguiHeap;
+
     ComPtr<ID3D12PipelineState> m_pipelineState;
     ComPtr<ID3D12PipelineState> m_postPipelineState;
     ComPtr<ID3D12PipelineState> m_overPipelineState;
+
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
     UINT m_rtvDescriptorSize;
     UINT m_dsvDescriptorSize;
@@ -135,6 +140,7 @@ private:
     ComPtr<ID3D12Fence> m_fence;
     UINT64 m_fenceValues[FrameCount];
 
+    // Custom app values
     UINT m_width = 0;
     UINT m_height = 0;
     UINT m_mapIndex = 1;
@@ -151,6 +157,9 @@ private:
     XMVECTOR m_updir = {0.0, 1.0, 0.0, 0.0};
     float m_fov = 45.0;
     float m_iconSize = 15.0;
+
+    // UI Values
+    bool m_demoOpen = true;
 
     std::array<Draws, WorldCount> m_worldDraws;
     std::array<std::vector<ItemMetadata>, WorldCount> m_worldItems;

@@ -46,17 +46,17 @@ int Win32Application::Run(DXSample *pSample, HINSTANCE hInstance, int nCmdShow) 
                      nullptr, // We aren't using menus.
                      hInstance, pSample);
 
-    // Initialize the sample. OnInit is defined in each child-implementation of
-    // DXSample.
-    pSample->OnInit();
-    ShowWindow(m_hwnd, nCmdShow);
-
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     ImGui::StyleColorsDark();
 
     ImGui_ImplWin32_Init(m_hwnd);
+
+    // Initialize the sample. OnInit is defined in each child-implementation of
+    // DXSample.
+    pSample->OnInit();
+    ShowWindow(m_hwnd, nCmdShow);
 
     // Main sample loop.
     MSG msg = {};

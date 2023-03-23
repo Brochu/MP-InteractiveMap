@@ -13,6 +13,9 @@
 #include "DXSampleHelper.h"
 #include "ImageIO.h"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_dx12.h"
+
 #include "assimp/Importer.hpp"
 #include "assimp/mesh.h"
 #include "assimp/postprocess.h"
@@ -146,6 +149,13 @@ void MapViewer::LoadPipeline() {
 
         m_srvDescriptorSize =
             m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+        D3D12_DESCRIPTOR_HEAP_DESC imguiHeapDesc{};
+        imguiHeapDesc.NumDescriptors = 1;
+        imguiHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        imguiHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        ThrowIfFailed(m_device->CreateDescriptorHeap(&imguiHeapDesc, IID_PPV_ARGS(&m_imguiHeap)));
+        NAME_D3D12_OBJECT(m_imguiHeap);
     }
 
     // Create frame resources.
@@ -211,6 +221,13 @@ void MapViewer::LoadPipeline() {
                                                            IID_PPV_ARGS(&m_commandAllocators[n])));
             NAME_D3D12_OBJECT_INDEXED(m_commandAllocators, n);
         }
+    }
+
+    // Setup Dx12 side of ImGui
+    {
+        ImGui_ImplDX12_Init(m_device.Get(), FrameCount, swapChainDesc.Format, m_imguiHeap.Get(),
+                            m_imguiHeap->GetCPUDescriptorHandleForHeapStart(),
+                            m_imguiHeap->GetGPUDescriptorHandleForHeapStart());
     }
 }
 
@@ -758,6 +775,9 @@ void MapViewer::OnUpdate() {
 
 // Render the scene.
 void MapViewer::OnRender() {
+    ImGui_ImplDX12_NewFrame();
+    ImGui::NewFrame();
+
     // Record all the commands we need to render the scene into the command
     // list.
     PopulateCommandList();
@@ -913,6 +933,14 @@ void MapViewer::PopulateCommandList() {
     auto iconDraws = m_iconDraws[m_mapIndex];
     m_commandList->SetGraphicsRoot32BitConstant(3, (UINT)iconDraws.instanceStart, 0);
     m_commandList->DrawInstanced(6, (UINT)iconDraws.instanceCount, 0, 0);
+
+    // ImGui Render
+    ImGui::ShowDemoWindow(&m_demoOpen);
+    ImGui::Render();
+
+    ID3D12DescriptorHeap *ppImguiHeap[]{m_imguiHeap.Get()};
+    m_commandList->SetDescriptorHeaps(1, ppImguiHeap);
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_commandList.Get());
 
     // Indicate that the back buffer will now be used to present.
     D3D12_RESOURCE_BARRIER present_barrier = CD3DX12_RESOURCE_BARRIER::Transition(
