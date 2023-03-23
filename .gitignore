@@ -458,3 +458,5 @@ FodyWeavers.xsd
 # ---------------------
 build/
 __build/
+
+imgui.ini
