@@ -16,14 +16,14 @@ set (headers
     ${CMAKE_CURRENT_LIST_DIR}/include/MapViewer.h
 )
 set (imgui_headers
-#    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imconfig.h
-#    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imgui.h
-#    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imgui_impl_dx12.h
-#    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imgui_impl_win32.h
-#    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imgui_internal.h
-#    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imstb_rectpack.h
-#    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imstb_textedit.h
-#    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imstb_truetype.h
+    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imconfig.h
+    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imgui.h
+    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imgui_impl_dx12.h
+    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imgui_impl_win32.h
+    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imgui_internal.h
+    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imstb_rectpack.h
+    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imstb_textedit.h
+    ${CMAKE_CURRENT_LIST_DIR}/include/imgui/imstb_truetype.h
 )
 
 set (source
@@ -37,13 +37,13 @@ set (source
     ${CMAKE_CURRENT_LIST_DIR}/src/MapViewer.cpp
 )
 set (imgui_source
-#    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui.cpp
-#    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui_demo.cpp
-#    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui_draw.cpp
-#    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui_impl_dx12.cpp
-#    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui_impl_win32.cpp
-#    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui_tables.cpp
-#    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui_widgets.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui_demo.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui_draw.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui_impl_dx12.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui_impl_win32.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui_tables.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/imgui/imgui_widgets.cpp
 )
 
 set (libs
