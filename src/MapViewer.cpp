@@ -271,8 +271,7 @@ void MapViewer::LoadAssets() {
         srvIconVertices.InitAsShaderResourceView(2, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE,
                                                  D3D12_SHADER_VISIBILITY_VERTEX);
         CD3DX12_ROOT_PARAMETER1 srvIconTypes;
-        srvIconTypes.InitAsShaderResourceView(3, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE,
-                                              D3D12_SHADER_VISIBILITY_VERTEX);
+        srvIconTypes.InitAsShaderResourceView(3);
 
         CD3DX12_ROOT_PARAMETER1 cbvConsts;
         cbvConsts.InitAsConstants(4, 0);
@@ -531,6 +530,7 @@ void MapViewer::LoadAssets() {
             std::stringstream ss(line);
             unsigned char itemType = 0;
             ss >> itemType;
+            itemType -= '0';
             ss.ignore();
             UINT worldIndex = 0;
             ss >> worldIndex;
@@ -552,7 +552,7 @@ void MapViewer::LoadAssets() {
         }
 
         std::vector<IconGeometry> iconGeometry;
-        std::vector<unsigned char> iconTypes;
+        std::vector<unsigned int> iconTypes;
         m_iconDraws = {};
 
         for (int i = 0; i < WorldCount; i++) {
@@ -568,7 +568,7 @@ void MapViewer::LoadAssets() {
         }
 
         const UINT geometrySize = sizeof(IconGeometry) * (UINT)iconGeometry.size();
-        const UINT iconTypeSize = sizeof(char) * (UINT)iconTypes.size();
+        const UINT iconTypeSize = sizeof(unsigned int) * (UINT)iconTypes.size();
 
         D3D12_HEAP_PROPERTIES uploadHeapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
         D3D12_RESOURCE_DESC iconBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(geometrySize);
@@ -729,17 +729,17 @@ void MapViewer::OnUpdate() {
 
             IconGeometry geo{};
             XMStoreFloat3(&geo.pos[0], item.position - right - up);
-            geo.uvs[0] = {1.0f, 1.0f};
+            geo.uvs[0] = {0.0f, 1.0f};
             XMStoreFloat3(&geo.pos[1], item.position - right + up);
-            geo.uvs[1] = {1.0f, 0.0f};
+            geo.uvs[1] = {0.0f, 0.0f};
             XMStoreFloat3(&geo.pos[2], item.position + right - up);
-            geo.uvs[2] = {0.0f, 1.0f};
+            geo.uvs[2] = {1.0f, 1.0f};
             XMStoreFloat3(&geo.pos[3], item.position + right - up);
-            geo.uvs[3] = {0.0f, 1.0f};
+            geo.uvs[3] = {1.0f, 1.0f};
             XMStoreFloat3(&geo.pos[4], item.position - right + up);
-            geo.uvs[4] = {1.0f, 0.0f};
+            geo.uvs[4] = {0.0f, 0.0f};
             XMStoreFloat3(&geo.pos[5], item.position + right + up);
-            geo.uvs[5] = {0.0f, 0.0f};
+            geo.uvs[5] = {1.0f, 0.0f};
 
             iconGeometry.push_back(geo);
         }

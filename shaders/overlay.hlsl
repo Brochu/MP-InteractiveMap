@@ -45,6 +45,12 @@ float4 PSMain(PSIn input) : SV_TARGET {
     // TODO: Use the item type and UVs to sample the right texture for the current icon
     // Maybe look into some effects later on?
     // Will the transparency work here?
+    uint vertIdx = (uint)input.Type;
+    uint type = typeBuffer.Load(vertIdx);
 
-    return energyT.Sample(s, input.Uvs);
+    if (type == 0) {
+        return energyT.Sample(s, input.Uvs);
+    } else {
+        return missileT.Sample(s, input.Uvs);
+    }
 }
