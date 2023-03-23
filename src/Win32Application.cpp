@@ -11,6 +11,9 @@
 
 #include "Win32Application.h"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_win32.h"
+
 #include "stdafx.h"
 
 HWND Win32Application::m_hwnd = nullptr;
@@ -46,8 +49,14 @@ int Win32Application::Run(DXSample *pSample, HINSTANCE hInstance, int nCmdShow) 
     // Initialize the sample. OnInit is defined in each child-implementation of
     // DXSample.
     pSample->OnInit();
-
     ShowWindow(m_hwnd, nCmdShow);
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplWin32_Init(m_hwnd);
 
     // Main sample loop.
     MSG msg = {};
@@ -59,14 +68,23 @@ int Win32Application::Run(DXSample *pSample, HINSTANCE hInstance, int nCmdShow) 
         }
     }
 
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
+
     pSample->OnDestroy();
 
     // Return this part of the WM_QUIT message to Windows.
     return static_cast<char>(msg.wParam);
 }
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam,
+                                                             LPARAM lParam);
+
 // Main message handler for the sample.
 LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+        return true;
+
     DXSample *pSample = reinterpret_cast<DXSample *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
     switch (message) {
@@ -105,6 +123,8 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
 
     case WM_PAINT:
         if (pSample) {
+            ImGui_ImplWin32_NewFrame();
+
             pSample->OnUpdate();
             pSample->OnRender();
         }
