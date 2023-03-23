@@ -547,7 +547,8 @@ void MapViewer::LoadAssets() {
             ss.ignore(2);
             ss >> z;
 
-            m_worldItems[worldIndex - 1].push_back({itemType, worldIndex, roomIndex, {x, y, z}});
+            // I am not sure why we would need to swap y & z axis positions
+            m_worldItems[worldIndex - 1].push_back({itemType, worldIndex, roomIndex, {x, z, y}});
         }
 
         std::vector<IconGeometry> iconGeometry;
