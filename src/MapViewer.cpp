@@ -404,6 +404,11 @@ void MapViewer::LoadAssets() {
         overpsoDesc.PS = CD3DX12_SHADER_BYTECODE(iconPixelShader.Get());
         overpsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
         overpsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        overpsoDesc.BlendState.RenderTarget[0].BlendEnable = true;
+        overpsoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+        overpsoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+        overpsoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+        overpsoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
         overpsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
         overpsoDesc.DepthStencilState.DepthEnable = false;
         overpsoDesc.DepthStencilState.StencilEnable = false;

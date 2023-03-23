@@ -9,7 +9,7 @@ struct IconVert {
 };
 
 StructuredBuffer<IconVert> vertexBuffer : register(t2);
-StructuredBuffer<uint> typeBuffer : register(t3); // Might need a mask for 8bit values
+StructuredBuffer<uint> typeBuffer : register(t3);
 
 cbuffer PerDraw : register(b0) { uint instanceOffset; };
 cbuffer PerFrame : register(b1) {
@@ -29,8 +29,6 @@ struct PSIn {
 };
 
 PSIn VSMain(VSIn input) {
-    // TODO: Implement getting the right vertex data based on InstanceId
-    // Get the vertex position and UVs to send to pixel shader
     uint vertIdx = instanceOffset + input.InstId;
     IconVert v = vertexBuffer.Load(vertIdx);
 
@@ -42,9 +40,6 @@ PSIn VSMain(VSIn input) {
 }
 
 float4 PSMain(PSIn input) : SV_TARGET {
-    // TODO: Use the item type and UVs to sample the right texture for the current icon
-    // Maybe look into some effects later on?
-    // Will the transparency work here?
     uint vertIdx = (uint)input.Type;
     uint type = typeBuffer.Load(vertIdx);
 
