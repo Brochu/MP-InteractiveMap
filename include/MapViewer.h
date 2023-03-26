@@ -159,7 +159,7 @@ private:
     float m_iconSize = 15.0;
 
     // UI Values
-    bool m_demoOpen = true;
+    bool m_uiOpen = true;
 
     std::array<Draws, WorldCount> m_worldDraws;
     std::array<std::vector<ItemMetadata>, WorldCount> m_worldItems;

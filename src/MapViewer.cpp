@@ -935,7 +935,11 @@ void MapViewer::PopulateCommandList() {
     m_commandList->DrawInstanced(6, (UINT)iconDraws.instanceCount, 0, 0);
 
     // ImGui Render
-    ImGui::ShowDemoWindow(&m_demoOpen);
+    if (ImGui::Begin("Configuration", &m_uiOpen, 0)) {
+        // The window is currently open
+        ImGui::SliderFloat("Icon Size", &m_iconSize, 0.1f, 45.f, " = %.3f", 0);
+    }
+    ImGui::End();
     ImGui::Render();
 
     ID3D12DescriptorHeap *ppImguiHeap[]{m_imguiHeap.Get()};
