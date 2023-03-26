@@ -697,7 +697,6 @@ void MapViewer::LoadAssets() {
 
 // Update frame-based values.
 void MapViewer::OnUpdate() {
-    XMMATRIX model = XMMatrixIdentity();
     XMMATRIX rotation = XMMatrixRotationRollPitchYaw(XMConvertToRadians((float)-m_xmap),
                                                      XMConvertToRadians((float)-m_ymap), 0.f);
 
@@ -707,6 +706,9 @@ void MapViewer::OnUpdate() {
 
     float aspect = (float)m_width / m_height;
     XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov), aspect, 0.1f, 100000.0f);
+
+    XMMATRIX model = XMMatrixIdentity();
+    // TODO: Find a way to translate the model based off of the mouse movements
 
     XMMATRIX mvp = XMMatrixMultiply(model, view);
     mvp = XMMatrixMultiply(mvp, projection);
@@ -934,7 +936,7 @@ void MapViewer::PopulateCommandList() {
     // ImGui Render
     if (ImGui::Begin("Configuration", &m_uiOpen, 0)) {
         // The window is currently open
-        ImGui::SliderFloat("Icon Size", &m_iconSize, 0.1f, 45.f, " = %.3f", 0);
+        ImGui::SliderFloat("Icon Size", &m_iconSize, 0.1f, 45.f, "%.3f", 0);
     }
     ImGui::End();
     ImGui::Render();
