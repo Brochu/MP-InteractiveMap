@@ -703,9 +703,6 @@ void MapViewer::OnUpdate() {
 
     XMVECTOR camera = XMVector4Transform(m_camera, rotation);
     XMVECTOR lookat = XMVector4Transform(m_lookat, rotation);
-    XMVECTOR translate{-(float)m_xt, -(float)m_yt, (float)m_zt, 0.f};
-    camera += translate;
-    lookat += translate;
     XMMATRIX view = XMMatrixLookAtLH(camera, lookat, m_updir);
 
     float aspect = (float)m_width / m_height;
