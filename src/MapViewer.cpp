@@ -701,7 +701,7 @@ void MapViewer::OnUpdate() {
                                               XMConvertToRadians((float)-m_ymap), 0.0);
     XMVECTOR camera = XMVector4Transform(m_camera, r);
 
-    XMVECTOR t{(float)-m_xt, (float)-m_yt, (float)m_zt};
+    XMVECTOR t{(float)m_xt, (float)m_yt, (float)-m_zt};
     // camera += t;
     // XMVECTOR lookat = m_lookat + t;
     XMMATRIX view = XMMatrixLookAtLH(camera, m_lookat, m_updir);
