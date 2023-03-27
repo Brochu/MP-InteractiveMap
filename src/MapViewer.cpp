@@ -697,18 +697,24 @@ void MapViewer::LoadAssets() {
 
 // Update frame-based values.
 void MapViewer::OnUpdate() {
-    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(XMConvertToRadians((float)-m_xmap),
-                                                     XMConvertToRadians((float)-m_ymap), 0.f);
+    XMMATRIX r = XMMatrixRotationRollPitchYaw(XMConvertToRadians((float)-m_xmap),
+                                              XMConvertToRadians((float)-m_ymap), 0.0);
+    XMVECTOR camera = XMVector4Transform(m_camera, r);
 
-    XMVECTOR camera = XMVector4Transform(m_camera, rotation);
-    XMVECTOR lookat = XMVector4Transform(m_lookat, rotation);
+    XMVECTOR forward = m_lookat - camera;
+    forward = XMVector3Normalize(forward);
+    XMVECTOR right = XMVector3Normalize(XMVector3Cross(forward, m_updir));
+    XMVECTOR up = XMVector3Normalize(XMVector3Cross(forward, right));
+
+    XMVECTOR t{(float)-m_xt, (float)-m_yt, (float)m_zt};
+    camera += t;
+    XMVECTOR lookat = m_lookat + t;
     XMMATRIX view = XMMatrixLookAtLH(camera, lookat, m_updir);
 
     float aspect = (float)m_width / m_height;
     XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov), aspect, 0.1f, 100000.0f);
 
     XMMATRIX model = XMMatrixIdentity();
-    // TODO: Find a way to translate the model based off of the mouse movements
 
     XMMATRIX mvp = XMMatrixMultiply(model, view);
     mvp = XMMatrixMultiply(mvp, projection);
@@ -734,17 +740,15 @@ void MapViewer::OnUpdate() {
 
             XMFLOAT4X4 viewMat{};
             XMStoreFloat4x4(&viewMat, view);
-
-            auto v_11 = viewMat.m[0][0];
-            auto v_21 = viewMat.m[1][0];
-            auto v_31 = viewMat.m[2][0];
-
-            auto v_12 = viewMat.m[0][1];
-            auto v_22 = viewMat.m[1][1];
-            auto v_32 = viewMat.m[2][1];
-
+            float v_11 = viewMat.m[0][0];
+            float v_21 = viewMat.m[1][0];
+            float v_31 = viewMat.m[2][0];
             XMVECTOR right{v_11, v_21, v_31};
             right = XMVector3Normalize(right) * m_iconSize * 0.5f;
+
+            float v_12 = viewMat.m[0][1];
+            float v_22 = viewMat.m[1][1];
+            float v_32 = viewMat.m[2][1];
             XMVECTOR up{v_12, v_22, v_32};
             up = XMVector3Normalize(up) * m_iconSize * 0.5f;
 
