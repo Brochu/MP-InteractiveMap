@@ -702,14 +702,14 @@ void MapViewer::OnUpdate() {
     XMVECTOR camera = XMVector4Transform(m_camera, r);
 
     XMVECTOR t{(float)-m_xt, (float)-m_yt, (float)m_zt};
-    camera += t;
-    XMVECTOR lookat = m_lookat + t;
-    XMMATRIX view = XMMatrixLookAtLH(camera, lookat, m_updir);
+    // camera += t;
+    // XMVECTOR lookat = m_lookat + t;
+    XMMATRIX view = XMMatrixLookAtLH(camera, m_lookat, m_updir);
 
     float aspect = (float)m_width / m_height;
     XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov), aspect, 0.1f, 100000.0f);
 
-    XMMATRIX model = XMMatrixIdentity();
+    XMMATRIX model = XMMatrixTranslationFromVector(t);
 
     XMMATRIX mvp = XMMatrixMultiply(model, view);
     mvp = XMMatrixMultiply(mvp, projection);
