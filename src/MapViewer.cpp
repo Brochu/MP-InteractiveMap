@@ -810,9 +810,9 @@ void MapViewer::OnKeyDown(UINT8 key) {
 void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool ctrl) {
     if (LButton) {
         m_ymap += (m_mx - x);
-        if (m_ymap >= 180)
+        if (m_ymap >= 360)
             m_ymap -= 360;
-        if (m_ymap < -180)
+        if (m_ymap < 0)
             m_ymap += 360;
 
         m_xmap += (m_my - y);
@@ -822,16 +822,15 @@ void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool c
             m_xmap = -89;
     }
 
-    //TODO: Figure out a way to modify the pos with current roll in mind
-    printf("ROLL = %i; %f\n", m_ymap, sin(m_ymap / ((float)M_PI * 180)));
-    float t = 0.f;
+    //TODO: Calculate forward+right vects here
+    // Get spherical coords converted to find forward
+    XMVECTOR forward { 1.f, 0.f, 0.f };
+    XMVECTOR up { 0.f, 1.f, 0.f };
+    XMVECTOR right = XMVector3Cross(-forward, up);
 
     if (RButton && !ctrl) {
-        int xdelta = m_mx - x;
-        int ydelta = m_my - y;
-
-        m_xt -= ((1.f - t) * xdelta) + (t * ydelta);
-        m_zt -= (t * xdelta) + ((1.f - t) * ydelta);
+        m_xt -= m_mx - x;
+        m_zt -= m_my - y;
     } else if (RButton) {
         m_yt += (m_my - y);
     }
