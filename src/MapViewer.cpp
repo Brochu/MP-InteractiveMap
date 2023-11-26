@@ -22,6 +22,8 @@
 #include "assimp/scene.h"
 #include "stdafx.h"
 
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include <format>
 #include <fstream>
 #include <sstream>
@@ -707,7 +709,7 @@ void MapViewer::OnUpdate() {
     float aspect = (float)m_width / m_height;
     XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov), aspect, 0.1f, 100000.0f);
 
-    XMVECTOR vect{(float)m_xt, (float)m_yt, (float)-m_zt};
+    XMVECTOR vect{ (float)m_xt, (float)m_yt, (float)-m_zt };
     XMMATRIX t = XMMatrixTranslationFromVector(vect);
     XMMATRIX model = XMMatrixIdentity();
     model = XMMatrixMultiply(model, t);
@@ -716,7 +718,7 @@ void MapViewer::OnUpdate() {
     mvp = XMMatrixMultiply(mvp, projection);
     XMMATRIX world = XMMatrixTranspose(model);
 
-    ConstantBuffer cb{mvp, world};
+    ConstantBuffer cb{ mvp, world };
 
     UINT8 *p;
     CD3DX12_RANGE readRange(0, 0);
@@ -808,9 +810,9 @@ void MapViewer::OnKeyDown(UINT8 key) {
 void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool ctrl) {
     if (LButton) {
         m_ymap += (m_mx - x);
-        if (m_ymap > 360)
+        if (m_ymap >= 180)
             m_ymap -= 360;
-        if (m_ymap < -360)
+        if (m_ymap < -180)
             m_ymap += 360;
 
         m_xmap += (m_my - y);
@@ -818,12 +820,18 @@ void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool c
             m_xmap = 89;
         if (m_xmap < -89)
             m_xmap = -89;
-        // TODO: Find a fix to make the translation moves the map with the current rotation taken into account
     }
 
+    //TODO: Figure out a way to modify the pos with current roll in mind
+    printf("ROLL = %i; %f\n", m_ymap, sin(m_ymap / ((float)M_PI * 180)));
+    float t = 0.f;
+
     if (RButton && !ctrl) {
-        m_xt -= (m_mx - x);
-        m_zt -= (m_my - y);
+        int xdelta = m_mx - x;
+        int ydelta = m_my - y;
+
+        m_xt -= ((1.f - t) * xdelta) + (t * ydelta);
+        m_zt -= (t * xdelta) + ((1.f - t) * ydelta);
     } else if (RButton) {
         m_yt += (m_my - y);
     }
