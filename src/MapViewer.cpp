@@ -697,6 +697,8 @@ void MapViewer::LoadAssets() {
 
 // Update frame-based values.
 void MapViewer::OnUpdate() {
+    //TODO: Need to use spherical coords here to place the camera
+    // This is the way to have actual orbit controls
     XMMATRIX r = XMMatrixRotationRollPitchYaw(XMConvertToRadians((float)-m_xmap),
                                               XMConvertToRadians((float)-m_ymap), 0.0);
     XMVECTOR camera = XMVector4Transform(m_camera, r);
