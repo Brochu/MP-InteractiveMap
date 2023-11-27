@@ -701,7 +701,17 @@ void MapViewer::LoadAssets() {
 void MapViewer::OnUpdate() {
     XMVECTOR lookat { 0.f, 0.f, 0.f, 1.f };
     XMVECTOR updir { 0.f, 1.f, 0.f, 0.f };
+
+    XMVECTOR angles {
+        XMConvertToRadians(m_orbPhi),
+        XMConvertToRadians(m_orbTheta),
+        XMConvertToRadians(0)
+    };
     XMVECTOR camera { 0.f, 0.f, 600.f, 1.f };
+    XMMATRIX orbit = XMMatrixRotationRollPitchYawFromVector(angles);
+    camera = XMVector3Transform(camera, orbit);
+    //printf("Theta: %f; Phi: %f; Camera position: (%f, %f, %f)\n", m_orbTheta, m_orbPhi, cx, cy, cz);
+
     XMMATRIX view = XMMatrixLookAtLH(camera, lookat, updir);
 
     float aspect = (float)m_width / m_height;
@@ -810,13 +820,13 @@ void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool c
     float dy = (float)m_my - y;
 
     if (LButton) {
-        m_orbTheta += dy;
-        if (m_orbTheta < 0) m_orbTheta += 180.f;
-        if (m_orbTheta > 180) m_orbTheta -= 180.f;
+        m_orbTheta += dx;
+        if (m_orbTheta < 0.f) m_orbTheta += 360.f;
+        if (m_orbTheta > 360.f) m_orbTheta -= 360.f;
 
-        m_orbPhi += dx;
-        if (m_orbPhi < 0) m_orbPhi += 360.f;
-        if (m_orbPhi > 360) m_orbPhi -= 360.f;
+        m_orbPhi += dy;
+        if (m_orbPhi < -89.f) m_orbPhi = -89.f;
+        if (m_orbPhi > 89.f) m_orbPhi = 89.f;
     }
 
     if (RButton && !ctrl) {
