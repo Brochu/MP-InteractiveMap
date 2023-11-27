@@ -710,7 +710,6 @@ void MapViewer::OnUpdate() {
     XMVECTOR camera { 0.f, 0.f, 600.f, 1.f };
     XMMATRIX orbit = XMMatrixRotationRollPitchYawFromVector(angles);
     camera = XMVector3Transform(camera, orbit);
-    //printf("Theta: %f; Phi: %f; Camera position: (%f, %f, %f)\n", m_orbTheta, m_orbPhi, cx, cy, cz);
 
     XMMATRIX view = XMMatrixLookAtLH(camera, lookat, updir);
 
@@ -718,6 +717,7 @@ void MapViewer::OnUpdate() {
     XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov), aspect, 0.1f, 100000.0f);
 
     XMMATRIX model = XMMatrixIdentity();
+    //TODO: Deal with movement here
 
     XMMATRIX mvp = XMMatrixMultiply(model, view);
     mvp = XMMatrixMultiply(mvp, projection);

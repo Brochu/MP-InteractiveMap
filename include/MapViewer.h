@@ -147,8 +147,8 @@ private:
 
     UINT m_mx = 0;
     UINT m_my = 0;
-    float m_orbTheta = 90.f;
-    float m_orbPhi = 0.f;
+    float m_orbTheta = 0.f;
+    float m_orbPhi = -45.f;
     float m_orbRad = 600.f;
     float m_tx = 0.f;
     float m_ty = 0.f;
