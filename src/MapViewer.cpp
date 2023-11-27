@@ -716,7 +716,7 @@ void MapViewer::OnUpdate() {
     float aspect = (float)m_width / m_height;
     XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov), aspect, 0.1f, 100000.0f);
 
-    XMMATRIX model = XMMatrixIdentity();
+    XMMATRIX model = XMMatrixTranslation(m_tx, m_ty, m_tz);
     //TODO: Deal with movement here
 
     XMMATRIX mvp = XMMatrixMultiply(model, view);
@@ -820,7 +820,7 @@ void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool c
     float dy = (float)m_my - y;
 
     if (LButton) {
-        m_orbTheta += dx;
+        m_orbTheta -= dx;
         if (m_orbTheta < 0.f) m_orbTheta += 360.f;
         if (m_orbTheta > 360.f) m_orbTheta -= 360.f;
 
@@ -832,7 +832,7 @@ void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool c
     if (RButton && !ctrl) {
         //TODO: Move map on xz plane
     } else if (RButton) {
-        //TODO: Move map on y axis
+        m_ty += dy;
     }
 
     m_mx = x;
