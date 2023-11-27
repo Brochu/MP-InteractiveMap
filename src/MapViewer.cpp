@@ -699,20 +699,15 @@ void MapViewer::LoadAssets() {
 
 // Update frame-based values.
 void MapViewer::OnUpdate() {
-    //TODO: Need to use spherical coords here to place the camera
-    // This is the way to have actual orbit controls
-    XMMATRIX r = XMMatrixRotationRollPitchYaw(XMConvertToRadians((float)-m_xmap),
-                                              XMConvertToRadians((float)-m_ymap), 0.0);
-    XMVECTOR camera = XMVector4Transform(m_camera, r);
-    XMMATRIX view = XMMatrixLookAtLH(camera, m_lookat, m_updir);
+    XMVECTOR lookat { 0.f, 0.f, 0.f, 1.f };
+    XMVECTOR updir { 0.f, 1.f, 0.f, 0.f };
+    XMVECTOR camera { 0.f, 0.f, 600.f, 1.f };
+    XMMATRIX view = XMMatrixLookAtLH(camera, lookat, updir);
 
     float aspect = (float)m_width / m_height;
     XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov), aspect, 0.1f, 100000.0f);
 
-    XMVECTOR vect{ (float)m_xt, (float)m_yt, (float)-m_zt };
-    XMMATRIX t = XMMatrixTranslationFromVector(vect);
     XMMATRIX model = XMMatrixIdentity();
-    model = XMMatrixMultiply(model, t);
 
     XMMATRIX mvp = XMMatrixMultiply(model, view);
     mvp = XMMatrixMultiply(mvp, projection);
@@ -808,31 +803,24 @@ void MapViewer::OnKeyDown(UINT8 key) {
 }
 
 void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool ctrl) {
-    if (LButton) {
-        m_ymap += (m_mx - x);
-        if (m_ymap >= 360)
-            m_ymap -= 360;
-        if (m_ymap < 0)
-            m_ymap += 360;
+    float dx = (float)m_mx - x;
+    float dy = (float)m_my - y;
 
-        m_xmap += (m_my - y);
-        if (m_xmap > 89)
-            m_xmap = 89;
-        if (m_xmap < -89)
-            m_xmap = -89;
+    if (LButton) {
+        m_orbTheta += dy;
+        if (m_orbTheta < 0) m_orbTheta += 180.f;
+        if (m_orbTheta > 180) m_orbTheta -= 180.f;
+
+        m_orbPhi += dy;
+        if (m_orbPhi < 0) m_orbPhi += 360;
+        if (m_orbPhi > 360) m_orbPhi -= 360;
     }
 
-    //TODO: Calculate forward+right vects here
-    // Get spherical coords converted to find forward
-    XMVECTOR forward { 1.f, 0.f, 0.f };
-    XMVECTOR up { 0.f, 1.f, 0.f };
-    XMVECTOR right = XMVector3Cross(-forward, up);
-
+    printf("[ORB] (%f, %f)\n", m_orbTheta, m_orbPhi);
     if (RButton && !ctrl) {
-        m_xt -= m_mx - x;
-        m_zt -= m_my - y;
+        //TODO: Move map on xz plane
     } else if (RButton) {
-        m_yt += (m_my - y);
+        //TODO: Move map on y axis
     }
 
     m_mx = x;

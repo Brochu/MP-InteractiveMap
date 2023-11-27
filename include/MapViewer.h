@@ -144,17 +144,16 @@ private:
     UINT m_width = 0;
     UINT m_height = 0;
     UINT m_mapIndex = 1;
+
     UINT m_mx = 0;
     UINT m_my = 0;
+    float m_orbTheta = 0.f;
+    float m_orbPhi = 90.f;
+    float m_orbRad = 600.f;
+    float m_tx = 0.f;
+    float m_ty = 0.f;
+    float m_tz = 0.f;
 
-    int m_ymap = 0;
-    int m_xmap = 0;
-    int m_xt = 0;
-    int m_yt = 0;
-    int m_zt = 0;
-    XMVECTOR m_camera = {0.0, 0.0, -600.0, 1.0};
-    XMVECTOR m_lookat = {0.0, 0.0, 0.0, 1.0};
-    XMVECTOR m_updir = {0.0, 1.0, 0.0, 0.0};
     float m_fov = 45.0;
     float m_iconSize = 15.0;
 
