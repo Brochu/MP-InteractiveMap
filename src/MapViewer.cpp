@@ -803,6 +803,9 @@ void MapViewer::OnKeyDown(UINT8 key) {
 }
 
 void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool ctrl) {
+    // Make sure the mouse is on screen
+    if (x < 0 || y < 0) return;
+
     float dx = (float)m_mx - x;
     float dy = (float)m_my - y;
 
@@ -811,12 +814,11 @@ void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool c
         if (m_orbTheta < 0) m_orbTheta += 180.f;
         if (m_orbTheta > 180) m_orbTheta -= 180.f;
 
-        m_orbPhi += dy;
-        if (m_orbPhi < 0) m_orbPhi += 360;
-        if (m_orbPhi > 360) m_orbPhi -= 360;
+        m_orbPhi += dx;
+        if (m_orbPhi < 0) m_orbPhi += 360.f;
+        if (m_orbPhi > 360) m_orbPhi -= 360.f;
     }
 
-    printf("[ORB] (%f, %f)\n", m_orbTheta, m_orbPhi);
     if (RButton && !ctrl) {
         //TODO: Move map on xz plane
     } else if (RButton) {
