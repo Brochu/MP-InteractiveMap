@@ -21,6 +21,7 @@
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"
 #include "stdafx.h"
+#include <DirectXMath.h>
 
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -831,6 +832,14 @@ void MapViewer::OnMouseMove(short x, short y, bool LButton, bool RButton, bool c
 
     if (RButton && !ctrl) {
         //TODO: Move map on xz plane
+        // Based off of the current m_orbTheta
+        float cosT = cos(XMConvertToRadians(m_orbTheta));
+        float sinT = sin(XMConvertToRadians(m_orbTheta));
+        float tx = dx * cosT - dy * sinT;
+        float ty = dx * sinT + dy * cosT;
+        //printf("Theta: %f; Before: (%f, %f); After: (%f, %f\n", m_orbTheta, dx, dy, tx, ty);
+        m_tx += tx;
+        m_tz -= ty;
     } else if (RButton) {
         m_ty += dy;
     }
